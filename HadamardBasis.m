@@ -1,0 +1,26 @@
+classdef HadamardBasis
+
+    properties (Access = private)
+        matrix
+    end
+
+    methods
+
+        function obj = HadamardBasis(dim)
+            one = ones(dim, dim);
+
+            for k = 1:dim ^ 2
+                u0 = imread(['../data/Hadamard64_input/hadamard', int2str(k), '.png']);
+                u = reshape(2 * u0 - one, [], 1);
+                obj.matrix(:, k) = u;
+            end
+
+        end
+
+        function res = getMatrix(obj)
+            res = obj.matrix;
+        end
+
+    end
+
+end

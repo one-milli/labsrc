@@ -1,6 +1,6 @@
 %% Generate system matrix
 % Input size, Output size, Trim row from, Trim row to, Trim column from, Trim column to, ExpDate
-config = Config(128, 64, 460, 920, 400, 860, '230516', 1e-2);
+config = Config(128, 64, 460, 920, 400, 860, '230922', 1e-2);
 
 tStart = tic;
 

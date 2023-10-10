@@ -1,20 +1,11 @@
 %% Generate sparse system matrix
 % Input size, Output size(Hadamard dim), ExpDate, Threshold
 config = Config(128, 64, '230516', 1e-2);
+isSparse = true;
 
 tStart = tic;
 
-try
-    %Load original
-    %systemMatrix = load(['../data/systemMatrix/systemMatrix', config.getExpDate(), '_origin.mat']).systemMatrix;
-    systemMatrix = SystemMatrix(config);
-catch
-    %Generate
-    systemMatrix = SystemMatrix(config);
-end
-
-%Sparsification
-% systemMatrix = systemMatrix.sparsification(config.getThreshold());
+systemMatrix = SystemMatrix(config, isSparse);
 
 tElapsed = toc(tStart);
 disp(['Time elapsed: ' num2str(tElapsed) ' seconds.']);

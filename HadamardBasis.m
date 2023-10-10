@@ -22,9 +22,6 @@ classdef HadamardBasis
 
         end
 
-        %{
-            getter
-        %}
         function res = getMatrix(obj)
             res = obj.matrix;
         end

@@ -10,9 +10,9 @@ reconstDate = '231003';
 
 % read captured image and stretch
 g = imread(['../data/capture_', config.getExpDate(), '/', objectName, '.png']);
-g = double(imresize(g(400:850, 400:850, :), [config.getInputSize(), config.getInputSize()])) / 255;
+% g = double(imresize(g(400:850, 400:850, :), [config.getInputSize(), config.getInputSize()])) / 255; % 128
 % g = double(imresize(g, [config.getInputSize(), config.getInputSize()])) / 255;
-% g = double(imresize(g(460:920, 400:860, :), [config.getInputSize(), config.getInputSize()])) / 255;
+g = double(imresize(g(460:920, 400:860, :), [config.getInputSize(), config.getInputSize()])) / 255; % 64
 imwrite(g, ['../data/bef_reconst/cap_', config.getExpDate(), '/', objectName, '.png'], 'BitDepth', 8)
 figure(1), imshow(g);
 g_col = reshape(g, [], 1);
@@ -28,17 +28,10 @@ else
     systemMatrix = load(['../data/systemMatrix/systemMatrix', config.getExpDate(), '_origin.mat']).systemMatrix;
 end
 
-disp('Creating ADMM instance...');
+HTH = HTH(systemMatrix, isSparse);
+admm = ADMM(config);
 
-admm = ADMM(config, systemMatrix, isSparse);
-
-disp(['Reconstructing...', ' mu1: ', num2str(mu1), ' mu2: ', num2str(mu2), ' tau: ', num2str(tau)]);
-
-tStart = tic;
-result = admm.reconstruction(g_col, mu1, mu2, tau);
-tElapsed = toc(tStart);
-
-disp(['Time elapsed: ' num2str(tElapsed) ' seconds.']);
+result = admm.reconstruction(g_col, mu1, mu2, tau, systemMatrix, HTH);
 
 result.save(objectName, 2, reconstDate, isSparse);
 

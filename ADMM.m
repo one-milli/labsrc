@@ -18,18 +18,81 @@ classdef ADMM
 
     methods
 
-        function obj = ADMM(config, H)
+        function obj = ADMM(config, H, isSparse)
             obj.config = config;
             obj.s = config.getInputSize();
             obj.n = config.getOutputSize();
-            obj.H = H;
 
-            obj.HTH = H' * H;
-            obj.HTH(abs(obj.HTH) <= 1e-4) = 0;
-            obj.HTH = sparse(obj.HTH);
-            Dy = eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 1]);
-            Dx = eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 obj.n]);
-            D0 = zeros(obj.n ^ 2);
+            H_tmp1 = sparse(cat(2, H.H_rr, H.H_rg));
+            H_tmp1 = sparse(cat(2, H_tmp1, H.H_rb));
+            H_tmp2 = sparse(cat(2, H.H_gr, H.H_gg));
+            H_tmp2 = sparse(cat(2, H_tmp2, H.H_gb));
+            H_tmp3 = sparse(cat(2, H.H_br, H.H_bg));
+            H_tmp3 = sparse(cat(2, H_tmp3, H.H_bb));
+
+            obj.H = sparse(cat(1, H_tmp1, H_tmp2));
+            clear H_tmp1 H_tmp2;
+            obj.H = sparse(cat(1, obj.H, H_tmp3));
+            clear H_tmp3;
+
+            obj.H = sparse(obj.H);
+
+            if isSparse
+                HTH_rr = (H.H_rr)' * H.H_rr + (H.H_gr)' * H.H_gr + (H.H_br)' * H.H_br;
+                HTH_rr(abs(HTH_rr) <= 1e-4) = 0;
+                HTH_rr = sparse(HTH_rr);
+                HTH_rg = (H.H_rr)' * H.H_rg + (H.H_gr)' * H.H_gg + (H.H_br)' * H.H_bg;
+                HTH_rg(abs(HTH_rg) <= 1e-4) = 0;
+                HTH_rg = sparse(HTH_rg);
+                HTH_rb = (H.H_rr)' * H.H_rb + (H.H_gr)' * H.H_gb + (H.H_br)' * H.H_bb;
+                HTH_rb(abs(HTH_rb) <= 1e-4) = 0;
+                HTH_rb = sparse(HTH_rb);
+                HTH_gr = (H.H_rg)' * H.H_rr + (H.H_gg)' * H.H_gr + (H.H_bg)' * H.H_br;
+                HTH_gr(abs(HTH_gr) <= 1e-4) = 0;
+                HTH_gr = sparse(HTH_gr);
+                HTH_gg = (H.H_rg)' * H.H_rg + (H.H_gg)' * H.H_gg + (H.H_bg)' * H.H_bg;
+                HTH_gg(abs(HTH_gg) <= 1e-4) = 0;
+                HTH_gg = sparse(HTH_gg);
+                HTH_gb = (H.H_rg)' * H.H_rb + (H.H_gg)' * H.H_gb + (H.H_bg)' * H.H_bb;
+                HTH_gb(abs(HTH_gb) <= 1e-4) = 0;
+                HTH_gb = sparse(HTH_gb);
+                HTH_br = (H.H_rb)' * H.H_rr + (H.H_gb)' * H.H_gr + (H.H_bb)' * H.H_br;
+                HTH_br(abs(HTH_br) <= 1e-4) = 0;
+                HTH_br = sparse(HTH_br);
+                HTH_bg = (H.H_rb)' * H.H_rg + (H.H_gb)' * H.H_gg + (H.H_bb)' * H.H_bg;
+                HTH_bg(abs(HTH_bg) <= 1e-4) = 0;
+                HTH_bg = sparse(HTH_bg);
+                HTH_bb = (H.H_rb)' * H.H_rb + (H.H_gb)' * H.H_gb + (H.H_bb)' * H.H_bb;
+                HTH_bb(abs(HTH_bb) <= 1e-4) = 0;
+                HTH_bb = sparse(HTH_bb);
+
+                HTH_tmp1 = cat(2, HTH_rr, HTH_rg);
+                HTH_tmp1 = cat(2, HTH_tmp1, HTH_rb);
+                clear HTH_rr HTH_rg HTH_rb;
+                HTH_tmp2 = cat(2, HTH_gr, HTH_gg);
+                HTH_tmp2 = cat(2, HTH_tmp2, HTH_gb);
+                clear HTH_gr HTH_gg HTH_gb;
+                HTH_tmp3 = cat(2, HTH_br, HTH_bg);
+                HTH_tmp3 = cat(2, HTH_tmp3, HTH_bb);
+                clear HTH_br HTH_bg HTH_bb;
+                obj.HTH = cat(1, HTH_tmp1, HTH_tmp2);
+                obj.HTH = cat(1, obj.HTH, HTH_tmp3);
+                clear HTH_tmp1 HTH_tmp2 HTH_tmp3;
+
+                obj.HTH = sparse(obj.HTH);
+%{
+                 obj.HTH = H' * H;
+                obj.HTH(abs(obj.HTH) <= 1e-4) = 0;
+                obj.HTH = sparse(obj.HTH);
+%}
+
+            else
+                obj.HTH = H' * H;
+            end
+
+            Dy = sparse(eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 1]));
+            Dx = sparse(eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 obj.n]));
+            D0 = sparse(zeros(obj.n ^ 2));
             obj.D = sparse([Dy D0 D0; D0 Dy D0; D0 D0 Dy; Dx D0 D0; D0 Dx D0; D0 D0 Dx]);
             obj.DTD = sparse(obj.D' * obj.D);
             obj.Psi = @(f)(obj.D * f);

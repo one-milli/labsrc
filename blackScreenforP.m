@@ -1,9 +1,14 @@
-%Simulate the capture of the patterns and their use for binary search
+%% Simulate the capture of the patterns and their use for binary search
 imaqreset
 
+config = Config(128, 64, '230922', 1e-2);
 expDate = '230922';
+trimRowFrom = 400;
+trimRowTo = 850;
+trimColFrom = 400;
+trimColTo = 850;
 n = 128;
-nn = n ^ 2;
+nn = n * n;
 
 pause('on')
 
@@ -28,13 +33,16 @@ rect_pc_confirm = [floor(wx_pc / 4) floor(wy_pc / 4) floor(wx_pc / 2) floor(wy_p
 %% Figure initialization
 set(0, 'defaultfigureposition', rect_pro);
 h = figure('Units', 'pixels', 'DockControls', 'off', 'MenuBar', 'none', 'ToolBar', 'none');
-%h=figure('WindowState','fullscreen','Units','pixels','DockControls','off','MenuBar','none','ToolBar','none');
 ha = axes('Parent', h, 'Units', 'pixels', 'Position', [1 1 wx_pro wy_pro]);
 
+sta = 2;
+fin = 2;
+
+%% Load Hadamard
 hadamard = zeros(n, n, nn);
 
-for k = 1:nn
-    input = imread(['../data/Hadamard', int2str(n), '_input/hadamard', int2str(k), '.png']);
+for k = sta:fin
+    input = uint8(imread(['../data/Hadamard', int2str(n), '_input/hadamard', int2str(k), '.png']));
     input = imresize(input, [n, n]);
     hadamard(:, :, k) = input;
 end
@@ -52,30 +60,32 @@ vid.TriggerRepeat = Inf;
 start(vid);
 
 %% capture white
-Line = zeros(wy_pro, wx_pro);
+if sta == 1
+    Line = zeros(wy_pro, wx_pro);
 
-for i = 1:n
+    for i = 1:n
 
-    for j = 1:n
-        temp = zeros(mg, mg);
-        temp(:) = hadamard(j, i, 1);
-        Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg) = temp;
+        for j = 1:n
+            temp = zeros(mg, mg);
+            temp(:) = hadamard(j, i, 1);
+            Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg) = temp;
+        end
+
     end
 
+    disp('capture white')
+    imshow(Line, 'Parent', ha);
+
+    pause(2)
+
+    trigger(vid);
+    img = getdata(vid, 1);
+
+    imwrite(img, ['../data/capture_', expDate, '/capturewhite.png'], 'BitDepth', 8);
 end
 
-disp('capture white')
-imshow(Line, 'Parent', ha);
-
-pause(2)
-
-trigger(vid);
-img = getdata(vid, 1);
-
-imwrite(img, ['../data/capture_', expDate, '/capturewhite.png']);
-
 %% capture
-for k = 1:nn
+for k = sta:fin
 
     for col = 1:3
 
@@ -91,10 +101,17 @@ for k = 1:nn
 
         end
 
-        disp(k)
+        if col == 1
+            disp(['R ', int2str(k)])
+        elseif col == 2
+            disp(['G ', int2str(k)])
+        else
+            disp(['B ', int2str(k)])
+        end
+
         imshow(Line, 'Parent', ha);
 
-        if k == 1 && col == 1
+        if k == sta
             pause(2)
         else
             pause(0.5)
@@ -102,13 +119,14 @@ for k = 1:nn
 
         trigger(vid);
         img = getdata(vid, 1);
+        img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo, :);
 
         if col == 1
-            imwrite(img, ['../data/hadamard_cap_R_', expDate, '/hadamard', int2str(n), '_', int2str(k), '.png']);
+            imwrite(img, ['../data/hadamard_cap_R_', expDate, '/hadamard', int2str(n), '_', int2str(k), '.png'], 'BitDepth', 8);
         elseif col == 2
-            imwrite(img, ['../data/hadamard_cap_G_', expDate, '/hadamard', int2str(n), '_', int2str(k), '.png']);
+            imwrite(img, ['../data/hadamard_cap_G_', expDate, '/hadamard', int2str(n), '_', int2str(k), '.png'], 'BitDepth', 8);
         else
-            imwrite(img, ['../data/hadamard_cap_B_', expDate, '/hadamard', int2str(n), '_', int2str(k), '.png']);
+            imwrite(img, ['../data/hadamard_cap_B_', expDate, '/hadamard', int2str(n), '_', int2str(k), '.png'], 'BitDepth', 8);
         end
 
     end

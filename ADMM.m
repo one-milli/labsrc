@@ -37,7 +37,7 @@ classdef ADMM
         % Reconstruction
         % @return: Result
         %}
-        function res = reconstruction(obj, g_col, mu1, mu2, tau, splitH, splitHTH)
+        function res = reconstruction(obj, g_col, mu1, mu2, tau, splitH)
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             H = cat(2, cat(2, splitH.H_rr, splitH.H_rg), splitH.H_rb);
             % H_r = cat(2, cat(2, splitH.H_rr, splitH.H_rg), splitH.H_rb);
@@ -71,7 +71,6 @@ classdef ADMM
             rho_z = mu2 * obj.Psi(f);
             rho_w = zeros(3 * obj.n ^ 2, 1);
 
-            temp = zeros(obj.n, obj.n);
             temp_r = zeros(obj.n, obj.n);
             temp_g = zeros(obj.n, obj.n);
             temp_b = zeros(obj.n, obj.n);

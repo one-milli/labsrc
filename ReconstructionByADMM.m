@@ -15,7 +15,7 @@ g = double(imresize(g(460:920, 400:860, :), [config.getInputSize(), config.getIn
 % g = double(imresize(g(400:850, 400:850, :), [config.getInputSize(), config.getInputSize()])) / 255; % 128
 imwrite(g, ['../data/bef_reconst/cap_', config.getExpDate(), '/', objectName, '.png'], 'BitDepth', 8)
 figure(1), imshow(g);
-g_col = reshape(g, [], 1);
+g_col = reshape(g(:, :, 1), [], 1);
 
 %%%%
 
@@ -28,10 +28,10 @@ else
     systemMatrix = load(['../data/systemMatrix/systemMatrix', config.getExpDate(), '_origin.mat']).systemMatrix;
 end
 
-HTH = HTH(systemMatrix, isSparse);
+% HTH = HTH(systemMatrix, isSparse);
 admm = ADMM(config);
 
-result = admm.reconstruction(g_col, mu1, mu2, tau, systemMatrix, HTH);
+result = admm.reconstruction(g_col, mu1, mu2, tau, systemMatrix);
 
 result.save(objectName, 2, reconstDate, isSparse);
 

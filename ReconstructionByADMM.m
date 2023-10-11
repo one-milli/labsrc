@@ -6,7 +6,9 @@ mu1 = 1e2;
 mu2 = 1e-2;
 tau = 1e-3;
 isSparse = true;
-reconstDate = '231003';
+date = datetime("now");
+fmt = "yyMMdd";
+reconstDate = string(date, fmt);
 
 % read captured image and stretch
 g = imread(['../data/capture_', config.getExpDate(), '/', objectName, '.png']);

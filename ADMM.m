@@ -16,6 +16,9 @@ classdef ADMM
 
     methods
 
+        %{
+        % Constructor
+        %}
         function obj = ADMM(config)
             obj.config = config;
             obj.s = config.getInputSize();
@@ -30,7 +33,12 @@ classdef ADMM
             obj.SoftThresh = @(x, t)max(abs(x) - t, 0) .* sign(x);
         end
 
+        %{
+        % Reconstruction
+        % @return: Result
+        %}
         function res = reconstruction(obj, g_col, mu1, mu2, tau, splitH, splitHTH)
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             H_tmp1 = cat(2, splitH.H_rr, splitH.H_rg);
             H_tmp1 = cat(2, H_tmp1, splitH.H_rb);
             H_tmp2 = cat(2, splitH.H_gr, splitH.H_gg);
@@ -52,10 +60,11 @@ classdef ADMM
             HTH_tmp3 = cat(2, HTH_tmp3, splitHTH.HTH_bb);
             HTH = cat(1, HTH, HTH_tmp3);
             clear HTH_tmp3;
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             R_k = @(W, Z, rho_w, rho_z, G, xi)(H' * (mu1 * G - xi)) + (obj.D' * (mu2 * Z - rho_z)) + mu2 * W - rho_w; %rho_w, rho_z: lagrange multipliers
 
-            %get init matrices
+            % get init matrices
             f = zeros(3 * obj.n ^ 2, 1);
             G = zeros(3 * obj.s ^ 2, 1);
             Z = zeros(6 * obj.n ^ 2, 1);
@@ -85,7 +94,8 @@ classdef ADMM
                 %Z_update z<-argmin_z L
                 Z = obj.SoftThresh(obj.Psi(f) + rho_z / mu2, tau / mu2); %Proximal operator
                 %W_update 0<=W<=1
-                W = min(max(f + rho_w / mu2, 0), 1);
+                % W = min(max(f + rho_w / mu2, 0), 1);
+                W = f + rho_w / mu2;
                 %G_update
                 G = divmat * (mu1 * H * f + g_col);
                 %eta_update
@@ -119,6 +129,9 @@ classdef ADMM
 
         end
 
+        %{
+            % Calculate error
+        %}
         function [error, temp_r, temp_g, temp_b] = calc_err(obj, f, temp_r, temp_g, temp_b)
             image_r = reshape(f(1:obj.n ^ 2, 1), [obj.n, obj.n]);
             image_g = reshape(f(obj.n ^ 2 + 1:2 * obj.n ^ 2, 1), [obj.n, obj.n]);

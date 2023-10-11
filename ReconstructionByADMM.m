@@ -10,9 +10,9 @@ reconstDate = '231003';
 
 % read captured image and stretch
 g = imread(['../data/capture_', config.getExpDate(), '/', objectName, '.png']);
-% g = double(imresize(g(400:850, 400:850, :), [config.getInputSize(), config.getInputSize()])) / 255; % 128
 % g = double(imresize(g, [config.getInputSize(), config.getInputSize()])) / 255;
 g = double(imresize(g(460:920, 400:860, :), [config.getInputSize(), config.getInputSize()])) / 255; % 64
+% g = double(imresize(g(400:850, 400:850, :), [config.getInputSize(), config.getInputSize()])) / 255; % 128
 imwrite(g, ['../data/bef_reconst/cap_', config.getExpDate(), '/', objectName, '.png'], 'BitDepth', 8)
 figure(1), imshow(g);
 g_col = reshape(g, [], 1);

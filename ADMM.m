@@ -39,18 +39,14 @@ classdef ADMM
         %}
         function res = reconstruction(obj, g_col, mu1, mu2, tau, splitH, splitHTH)
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            H_tmp1 = cat(2, splitH.H_rr, splitH.H_rg);
-            H_tmp1 = cat(2, H_tmp1, splitH.H_rb);
-            H_tmp2 = cat(2, splitH.H_gr, splitH.H_gg);
-            H_tmp2 = cat(2, H_tmp2, splitH.H_gb);
-            H = cat(1, H_tmp1, H_tmp2);
-            clear H_tmp1 H_tmp2;
-            H_tmp3 = cat(2, splitH.H_br, splitH.H_bg);
-            H_tmp3 = cat(2, H_tmp3, splitH.H_bb);
-            H = cat(1, H, H_tmp3);
-            clear H_tmp3;
+            H = cat(2, cat(2, splitH.H_rr, splitH.H_rg), splitH.H_rb);
+            % H_r = cat(2, cat(2, splitH.H_rr, splitH.H_rg), splitH.H_rb);
+            % H_g = cat(2, cat(2, splitH.H_gr, splitH.H_gg), splitH.H_gb);
+            % H_b = cat(2, cat(2, splitH.H_br, splitH.H_bg), splitH.H_bb);
+            HTH = H' * H;
 
-            HTH_tmp1 = cat(2, splitHTH.HTH_rr, splitHTH.HTH_rg);
+%{
+             HTH_tmp1 = cat(2, splitHTH.HTH_rr, splitHTH.HTH_rg);
             HTH_tmp1 = cat(2, HTH_tmp1, splitHTH.HTH_rb);
             HTH_tmp2 = cat(2, splitHTH.HTH_gr, splitHTH.HTH_gg);
             HTH_tmp2 = cat(2, HTH_tmp2, splitHTH.HTH_gb);
@@ -60,19 +56,22 @@ classdef ADMM
             HTH_tmp3 = cat(2, HTH_tmp3, splitHTH.HTH_bb);
             HTH = cat(1, HTH, HTH_tmp3);
             clear HTH_tmp3;
+%}
+
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             R_k = @(W, Z, rho_w, rho_z, G, xi)(H' * (mu1 * G - xi)) + (obj.D' * (mu2 * Z - rho_z)) + mu2 * W - rho_w; %rho_w, rho_z: lagrange multipliers
 
             % get init matrices
             f = zeros(3 * obj.n ^ 2, 1);
-            G = zeros(3 * obj.s ^ 2, 1);
+            G = zeros(obj.s ^ 2, 1);
             Z = zeros(6 * obj.n ^ 2, 1);
             W = zeros(3 * obj.n ^ 2, 1);
-            xi = zeros(3 * obj.s ^ 2, 1);
+            xi = zeros(obj.s ^ 2, 1);
             rho_z = mu2 * obj.Psi(f);
             rho_w = zeros(3 * obj.n ^ 2, 1);
 
+            temp = zeros(obj.n, obj.n);
             temp_r = zeros(obj.n, obj.n);
             temp_g = zeros(obj.n, obj.n);
             temp_b = zeros(obj.n, obj.n);

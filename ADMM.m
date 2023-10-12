@@ -114,22 +114,22 @@ classdef ADMM
             % Calculate error
         %}
         function [error, temp_r, temp_g, temp_b] = calc_err(obj, f, temp_r, temp_g, temp_b)
-            image_r = reshape(f(1:obj.n ^ 2, 1), [obj.n, obj.n]);
-            image_g = reshape(f(obj.n ^ 2 + 1:2 * obj.n ^ 2, 1), [obj.n, obj.n]);
+            image_g = reshape(f(1:obj.n ^ 2, 1), [obj.n, obj.n]);
+            image_r = reshape(f(obj.n ^ 2 + 1:2 * obj.n ^ 2, 1), [obj.n, obj.n]);
             image_b = reshape(f(2 * obj.n ^ 2 + 1:3 * obj.n ^ 2, 1), [obj.n, obj.n]);
-            diff_r = (temp_r - image_r);
             diff_g = (temp_g - image_g);
+            diff_r = (temp_r - image_r);
             diff_b = (temp_b - image_b);
-            fenzi_r = norm(diff_r, 'fro');
             fenzi_g = norm(diff_g, 'fro');
+            fenzi_r = norm(diff_r, 'fro');
             fenzi_b = norm(diff_b, 'fro');
-            fenmu_r = norm(image_r, 'fro');
             fenmu_g = norm(image_g, 'fro');
+            fenmu_r = norm(image_r, 'fro');
             fenmu_b = norm(image_b, 'fro');
 
             error = (fenzi_r / fenmu_r) + (fenzi_g / fenmu_g) + (fenzi_b / fenmu_b);
-            temp_r = image_r;
             temp_g = image_g;
+            temp_r = image_r;
             temp_b = image_b;
         end
 

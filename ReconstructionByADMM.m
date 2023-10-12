@@ -6,13 +6,10 @@ mu1 = 1e2;
 mu2 = 1e-2;
 tau = 1e-3;
 isSparse = true;
-date = datetime("now");
-fmt = "yyMMdd";
-reconstDate = string(date, fmt);
+reconstDate = string(datetime("now"), "yyMMdd");
 
 % read captured image and stretch
 g = imread(['../data/capture_', config.getExpDate(), '/', objectName, '.png']);
-% g = double(imresize(g, [config.getInputSize(), config.getInputSize()])) / 255;
 g = double(imresize(g(460:920, 400:860, :), [config.getInputSize(), config.getInputSize()])) / 255; % 64
 % g = double(imresize(g(400:850, 400:850, :), [config.getInputSize(), config.getInputSize()])) / 255; % 128
 imwrite(g, ['../data/bef_reconst/cap_', config.getExpDate(), '/', objectName, '.png'], 'BitDepth', 8)

@@ -73,8 +73,8 @@ classdef ADMM
                 %Z_update z<-argmin_z L
                 Z = obj.SoftThresh(obj.Psi(f) + rho_z / mu2, tau / mu2); %Proximal operator
                 %W_update 0<=W<=1
-                % W = min(max(f + rho_w / mu2, 0), 1);
-                W = f + rho_w / mu2;
+                W = min(max(f + rho_w / mu2, 0), 1);
+                % W = f + rho_w / mu2;
                 %G_update
                 G = divmat * (mu1 * H * f + g_col);
                 %eta_update

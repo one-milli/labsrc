@@ -17,6 +17,9 @@ g = double(imresize(g(460:920, 400:860, :), [config.getInputSize(), config.getIn
 % g = double(imresize(g(400:850, 400:850, :), [config.getInputSize(), config.getInputSize()])) / 255; % 128
 imwrite(g, ['../data/bef_reconst/cap_', config.getExpDate(), '/', objectName, '.png'], 'BitDepth', 8)
 figure(1), imshow(g);
+buf = g(:, :, 1);
+g(:, :, 1) = g(:, :, 2);
+g(:, :, 2) = buf;
 g_col = reshape(g, [], 1);
 
 %%%%

@@ -38,8 +38,10 @@ classdef ADMM
         % @return: Result
         %}
         function res = reconstruction(obj, g_col, mu1, mu2, tau, splitH, splitHTH)
-            H = [splitH.H_rr, splitH.H_rg, splitH.H_rb; splitH.H_gr, splitH.H_gg, splitH.H_gb; splitH.H_br, splitH.H_bg, splitH.H_bb];
-            HTH = [splitHTH.HTH_rr, splitHTH.HTH_rg, splitHTH.HTH_rb; splitHTH.HTH_gr, splitHTH.HTH_gg, splitHTH.HTH_gb; splitHTH.HTH_br, splitHTH.HTH_bg, splitHTH.HTH_bb];
+            % H = [splitH.H_rr, splitH.H_rg, splitH.H_rb; splitH.H_gr, splitH.H_gg, splitH.H_gb; splitH.H_br, splitH.H_bg, splitH.H_bb];
+            H = [splitH.H_gr, splitH.H_gg, splitH.H_gb; splitH.H_rr, splitH.H_rg, splitH.H_rb; splitH.H_br, splitH.H_bg, splitH.H_bb];
+            HTH = H' * H;
+            % HTH = [splitHTH.HTH_rr, splitHTH.HTH_rg, splitHTH.HTH_rb; splitHTH.HTH_gr, splitHTH.HTH_gg, splitHTH.HTH_gb; splitHTH.HTH_br, splitHTH.HTH_bg, splitHTH.HTH_bb];
 
             R_k = @(W, Z, rho_w, rho_z, G, xi)(H' * (mu1 * G - xi)) + (obj.D' * (mu2 * Z - rho_z)) + mu2 * W - rho_w; %rho_w, rho_z: lagrange multipliers
 

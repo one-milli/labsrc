@@ -15,7 +15,6 @@ classdef HTH
     methods
 
         function obj = HTH(H, isSparse)
-            test = H.H_rr;
             obj.HTH_rr = (H.H_rr)' * H.H_rr + (H.H_gr)' * H.H_gr + (H.H_br)' * H.H_br;
             obj.HTH_rr(abs(obj.HTH_rr) <= 1e-4) = 0;
 

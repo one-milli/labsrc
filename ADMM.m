@@ -38,29 +38,8 @@ classdef ADMM
         % @return: Result
         %}
         function res = reconstruction(obj, g_col, mu1, mu2, tau, splitH, splitHTH)
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            H_tmp1 = cat(2, splitH.H_rr, splitH.H_rg);
-            H_tmp1 = cat(2, H_tmp1, splitH.H_rb);
-            H_tmp2 = cat(2, splitH.H_gr, splitH.H_gg);
-            H_tmp2 = cat(2, H_tmp2, splitH.H_gb);
-            H = cat(1, H_tmp1, H_tmp2);
-            clear H_tmp1 H_tmp2;
-            H_tmp3 = cat(2, splitH.H_br, splitH.H_bg);
-            H_tmp3 = cat(2, H_tmp3, splitH.H_bb);
-            H = cat(1, H, H_tmp3);
-            clear H_tmp3;
-
-            HTH_tmp1 = cat(2, splitHTH.HTH_rr, splitHTH.HTH_rg);
-            HTH_tmp1 = cat(2, HTH_tmp1, splitHTH.HTH_rb);
-            HTH_tmp2 = cat(2, splitHTH.HTH_gr, splitHTH.HTH_gg);
-            HTH_tmp2 = cat(2, HTH_tmp2, splitHTH.HTH_gb);
-            HTH = cat(1, HTH_tmp1, HTH_tmp2);
-            clear HTH_tmp1 HTH_tmp2;
-            HTH_tmp3 = cat(2, splitHTH.HTH_br, splitHTH.HTH_bg);
-            HTH_tmp3 = cat(2, HTH_tmp3, splitHTH.HTH_bb);
-            HTH = cat(1, HTH, HTH_tmp3);
-            clear HTH_tmp3;
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            H = [splitH.H_rr, splitH.H_rg, splitH.H_rb; splitH.H_gr, splitH.H_gg, splitH.H_gb; splitH.H_br, splitH.H_bg, splitH.H_bb];
+            HTH = [splitHTH.HTH_rr, splitHTH.HTH_rg, splitHTH.HTH_rb; splitHTH.HTH_gr, splitHTH.HTH_gg, splitHTH.HTH_gb; splitHTH.HTH_br, splitHTH.HTH_bg, splitHTH.HTH_bb];
 
             R_k = @(W, Z, rho_w, rho_z, G, xi)(H' * (mu1 * G - xi)) + (obj.D' * (mu2 * Z - rho_z)) + mu2 * W - rho_w; %rho_w, rho_z: lagrange multipliers
 

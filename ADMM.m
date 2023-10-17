@@ -24,8 +24,24 @@ classdef ADMM
             obj.s = config.getInputSize();
             obj.n = config.getOutputSize();
 
-            Dy = sparse(eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 1]));
-            Dx = sparse(eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 obj.n]));
+            Dy = eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 1]);
+
+            for i = 1:obj.n
+                Dy(i * obj.n, i * obj.n) = 0;
+                Dy(i * obj.n, i * obj.n + 1) = 0;
+            end
+
+            Dy = sparse(Dy);
+
+            Dx = eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 obj.n]);
+
+            for i = obj.n ^ 2 - obj.n:obj.n ^ 2
+                Dx(i, i) = 0;
+                Dx(i, i - obj.n ^ 2 + 1) = 0;
+            end
+
+            Dx = sparse(Dx);
+
             D0 = sparse(zeros(obj.n ^ 2));
             obj.D = sparse([Dy D0 D0; D0 Dy D0; D0 D0 Dy; Dx D0 D0; D0 Dx D0; D0 D0 Dx]);
             obj.DTD = sparse(obj.D' * obj.D);

@@ -26,10 +26,12 @@ classdef ADMM
 
             Dy = eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 1]);
 
-            for i = 1:obj.n
+            for i = 1:obj.n - 1
                 Dy(i * obj.n, i * obj.n) = 0;
                 Dy(i * obj.n, i * obj.n + 1) = 0;
             end
+
+            Dy(obj.n ^ 2, obj.n ^ 2) = 0;
 
             Dy = sparse(Dy);
 
@@ -37,7 +39,7 @@ classdef ADMM
 
             for i = obj.n ^ 2 - obj.n:obj.n ^ 2
                 Dx(i, i) = 0;
-                Dx(i, i - obj.n ^ 2 + 1) = 0;
+                Dx(i, i - obj.n ^ 2 + obj.n + 1) = 0;
             end
 
             Dx = sparse(Dx);

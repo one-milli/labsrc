@@ -30,10 +30,9 @@ else
     systemMatrix = load(['../data/systemMatrix/systemMatrix', config.getExpDate(), '_origin.mat']).systemMatrix;
 end
 
-HTH = HTH(systemMatrix, isSparse);
 admm = ADMM(config);
 
-result = admm.reconstruction(g_col, mu1, mu2, tau, systemMatrix, HTH);
+result = admm.reconstruction(g_col, mu1, mu2, tau, systemMatrix);
 
 result.save(objectName, 2, reconstDate, isSparse);
 

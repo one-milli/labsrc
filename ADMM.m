@@ -37,7 +37,7 @@ classdef ADMM
         % Reconstruction
         % @return: Result
         %}
-        function res = reconstruction(obj, g_col, mu1, mu2, tau, splitH, splitHTH)
+        function res = reconstruction(obj, g_col, mu1, mu2, tau, splitH)
             % H = [splitH.H_rr, splitH.H_rg, splitH.H_rb; splitH.H_gr, splitH.H_gg, splitH.H_gb; splitH.H_br, splitH.H_bg, splitH.H_bb];
             H = [splitH.H_gr, splitH.H_gg, splitH.H_gb; splitH.H_rr, splitH.H_rg, splitH.H_rb; splitH.H_br, splitH.H_bg, splitH.H_bb];
             HTH = H' * H;

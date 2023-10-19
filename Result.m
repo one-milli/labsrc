@@ -44,7 +44,7 @@ classdef Result
 
             else
 
-                dirname = append('../data/reconst/ADMM_', reconstDate, '/');
+                dirname = append('../data/reconst/ADMM_', reconstDate, '/origin/');
 
                 if ~exist(dirname, 'dir')
                     mkdir(dirname);

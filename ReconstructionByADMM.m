@@ -1,11 +1,11 @@
 %% Execute ADMM Reconstruction
 % Input size, Output size(Hadamard dim), ExpDate, Threshold
 config = Config(128, 64, '230516', 1e-2);
-objectName = 'daruma_edited';
+objectName = 'capturewhite_R';
 mu1 = 1e2;
 mu2 = 1e-2;
 tau = 1e-3;
-isSparse = true;
+isSparse = false;
 reconstDate = string(datetime("now"), "yyMMdd");
 
 % read captured image and stretch
@@ -28,7 +28,7 @@ else
 end
 
 HTH = HTH(systemMatrix, isSparse);
-admm = ADMM(config);
+admm = ADMM(config, isSparse);
 
 result = admm.reconstruction(g_col, mu1, mu2, tau, systemMatrix, HTH);
 

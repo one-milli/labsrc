@@ -8,6 +8,7 @@ classdef ADMM
         config
         s
         n
+        isSparse
         D
         DTD
         Psi
@@ -19,10 +20,11 @@ classdef ADMM
         %{
         % Constructor
         %}
-        function obj = ADMM(config)
+        function obj = ADMM(config, isSparse)
             obj.config = config;
             obj.s = config.getInputSize();
             obj.n = config.getOutputSize();
+            obj.isSparse = isSparse;
 
             Dy = eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 1]);
 
@@ -33,8 +35,6 @@ classdef ADMM
 
             Dy(obj.n ^ 2, obj.n ^ 2) = 0;
 
-            Dy = sparse(Dy);
-
             Dx = eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 obj.n]);
 
             for i = obj.n ^ 2 - obj.n:obj.n ^ 2
@@ -42,11 +42,18 @@ classdef ADMM
                 Dx(i, i - obj.n ^ 2 + obj.n + 1) = 0;
             end
 
-            Dx = sparse(Dx);
+            D0 = zeros(obj.n ^ 2);
+            obj.D = [Dy D0 D0; D0 Dy D0; D0 D0 Dy; Dx D0 D0; D0 Dx D0; D0 D0 Dx];
+            obj.DTD = obj.D' * obj.D;
 
-            D0 = sparse(zeros(obj.n ^ 2));
-            obj.D = sparse([Dy D0 D0; D0 Dy D0; D0 D0 Dy; Dx D0 D0; D0 Dx D0; D0 D0 Dx]);
-            obj.DTD = sparse(obj.D' * obj.D);
+            if isSparse
+                Dy = sparse(Dy);
+                Dx = sparse(Dx);
+                D0 = sparse(zeros(obj.n ^ 2));
+                obj.D = sparse([Dy D0 D0; D0 Dy D0; D0 D0 Dy; Dx D0 D0; D0 Dx D0; D0 D0 Dx]);
+                obj.DTD = sparse(obj.D' * obj.D);
+            end
+
             obj.Psi = @(f)(obj.D * f);
             obj.SoftThresh = @(x, t)max(abs(x) - t, 0) .* sign(x);
         end
@@ -87,7 +94,12 @@ classdef ADMM
                 tStart2 = tic;
 
                 %f_update f<-argmin_f L
-                f = (mu1 * HTH + mu2 * obj.DTD + mu2 * speye(3 * obj.n ^ 2)) \ R_k(W, Z, rho_w, rho_z, G, xi);
+                if obj.isSparse
+                    f = (mu1 * HTH + mu2 * obj.DTD + mu2 * speye(3 * obj.n ^ 2)) \ R_k(W, Z, rho_w, rho_z, G, xi);
+                else
+                    f = (mu1 * HTH + mu2 * obj.DTD + mu2 * eye(3 * obj.n ^ 2)) \ R_k(W, Z, rho_w, rho_z, G, xi);
+                end
+
                 %Z_update z<-argmin_z L
                 Z = obj.SoftThresh(obj.Psi(f) + rho_z / mu2, tau / mu2); %Proximal operator
                 %W_update 0<=W<=1

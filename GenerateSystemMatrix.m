@@ -13,5 +13,5 @@ disp(['Time elapsed: ' num2str(tElapsed) ' seconds.']);
 if isSparse
     save(['../data/systemMatrix/systemMatrix', config.getExpDate(), '_1e', int2str(log10(config.getThreshold())), '.mat'], 'systemMatrix', '-v7.3');
 else
-    save(['../data/systemMatrix/systemMatrix_origin.mat'], 'systemMatrix', '-v7.3');
+    save(['../data/systemMatrix/systemMatrix', config.getExpDate(), '_origin.mat'], 'systemMatrix', '-v7.3');
 end

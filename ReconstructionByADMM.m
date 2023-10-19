@@ -7,6 +7,7 @@ mu2 = 1e-2;
 tau = 1e-3;
 isSparse = false;
 reconstDate = string(datetime("now"), "yyMMdd");
+note = "range0-2";
 
 % read captured image and stretch
 g = imread(['../data/capture_', config.getExpDate(), '/', objectName, '.png']);
@@ -32,6 +33,6 @@ admm = ADMM(config, isSparse);
 
 result = admm.reconstruction(g_col, mu1, mu2, tau, systemMatrix, HTH);
 
-result.save(objectName, 2, reconstDate, isSparse);
+result.save(objectName, 2, reconstDate, isSparse, note);
 
 clear admm;

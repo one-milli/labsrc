@@ -28,7 +28,7 @@ classdef Result
 
             if isSparse
 
-                dirname = append('../data/reconst/ADMM_', reconstDate, '/1e', int2str(log10(obj.threshold)), '/');
+                dirname = append('../data/reconst/ADMM_', reconstDate, '/1e', int2str(log10(obj.threshold)), '/', note, '/');
 
                 if ~exist(dirname, 'dir')
                     mkdir(dirname);
@@ -36,15 +36,15 @@ classdef Result
 
                 if opt == 2
                     figure(2), imshow(obj.image_doubled, []);
-                    imwrite(obj.image_doubled, append(dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), note, '.png'), 'BitDepth', 8);
+                    imwrite(obj.image_doubled, append(dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), '.png'), 'BitDepth', 8);
                 else
                     figure(2), imshow(obj.image, []);
-                    imwrite(obj.image, append(dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), note, '.png'), 'BitDepth', 8);
+                    imwrite(obj.image, append(dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), '.png'), 'BitDepth', 8);
                 end
 
             else
 
-                dirname = append('../data/reconst/ADMM_', reconstDate, '/origin/');
+                dirname = append('../data/reconst/ADMM_', reconstDate, '/origin/', note, '/');
 
                 if ~exist(dirname, 'dir')
                     mkdir(dirname);
@@ -52,10 +52,10 @@ classdef Result
 
                 if opt == 2
                     figure(2), imshow(obj.image_doubled, []);
-                    imwrite(obj.image_doubled, append(dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), note, '.png'), 'BitDepth', 8);
+                    imwrite(obj.image_doubled, append(dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), '.png'), 'BitDepth', 8);
                 else
                     figure(2), imshow(obj.image, []);
-                    imwrite(obj.image, append(dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), note, '.png'), 'BitDepth', 8);
+                    imwrite(obj.image, append(dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), '.png'), 'BitDepth', 8);
                 end
 
             end
@@ -68,7 +68,7 @@ classdef Result
 
             x_axis = 1:obj.iters;
             figure(3), plot(x_axis, obj.error);
-            exportgraphics(gca, append(g_dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), note, '_gr.png'));
+            exportgraphics(gca, append(g_dirname, objectName, '!t', int2str(log10(obj.tau)), ',m1', int2str(log10(obj.mu1)), ',m2', int2str(log10(obj.mu2)), '_gr.png'));
         end
 
     end

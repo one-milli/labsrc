@@ -10,4 +10,8 @@ systemMatrix = SystemMatrix(config, isSparse);
 tElapsed = toc(tStart);
 disp(['Time elapsed: ' num2str(tElapsed) ' seconds.']);
 
-save(['../data/systemMatrix/systemMatrix', config.getExpDate(), '_1e', int2str(log10(config.getThreshold())), '.mat'], 'systemMatrix', '-v7.3');
+if isSparse
+    save(['../data/systemMatrix/systemMatrix', config.getExpDate(), '_1e', int2str(log10(config.getThreshold())), '.mat'], 'systemMatrix', '-v7.3');
+else
+    save(['../data/systemMatrix/systemMatrix_origin.mat'], 'systemMatrix', '-v7.3');
+end

@@ -9,11 +9,12 @@ classdef Result
         mu1
         mu2
         tau
+        hf
     end
 
     methods
 
-        function obj = Result(image, error, iters, threshold, mu1, mu2, tau)
+        function obj = Result(image, error, iters, threshold, mu1, mu2, tau, hf)
             obj.image = image;
             obj.image_doubled = imresize(image, 2);
             obj.error = error;
@@ -22,6 +23,7 @@ classdef Result
             obj.mu1 = mu1;
             obj.mu2 = mu2;
             obj.tau = tau;
+            obj.hf = hf;
         end
 
         function save(obj, objectName, opt, reconstDate, isSparse, note)

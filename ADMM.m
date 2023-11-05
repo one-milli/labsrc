@@ -6,9 +6,6 @@ classdef ADMM
     properties
         eps = 0.01;
         config
-        s
-        n
-        isSparse
         D
         DTD
         Psi
@@ -20,39 +17,18 @@ classdef ADMM
         %{
         % Constructor
         %}
-        function obj = ADMM(config, isSparse)
+        function obj = ADMM(config)
             obj.config = config;
-            obj.s = config.getInputSize();
-            obj.n = config.getOutputSize();
-            obj.isSparse = isSparse;
+            n = config.getOutputSize();
 
-            Dy = eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 1]);
+            D0 = sparse(zeros(n ^ 2));
+            Dy = sparse(eye(n ^ 2) - circshift(eye(n ^ 2), [0 1]));
+            Dy(n:n:n ^ 2, :) = 0;
+            Dx = sparse(eye(n ^ 2) - circshift(eye(n ^ 2), [0 n]));
+            Dx(n ^ 2 - n + 1:n ^ 2, :) = 0;
 
-            for i = 1:obj.n - 1
-                Dy(i * obj.n, i * obj.n) = 0;
-                Dy(i * obj.n, i * obj.n + 1) = 0;
-            end
-
-            Dy(obj.n ^ 2, obj.n ^ 2) = 0;
-
-            Dx = eye(obj.n ^ 2) - circshift(eye(obj.n ^ 2), [0 obj.n]);
-
-            for i = obj.n ^ 2 - obj.n:obj.n ^ 2
-                Dx(i, i) = 0;
-                Dx(i, i - obj.n ^ 2 + obj.n + 1) = 0;
-            end
-
-            D0 = zeros(obj.n ^ 2);
-            obj.D = [Dy D0 D0; D0 Dy D0; D0 D0 Dy; Dx D0 D0; D0 Dx D0; D0 D0 Dx];
-            obj.DTD = obj.D' * obj.D;
-
-            if isSparse
-                Dy = sparse(Dy);
-                Dx = sparse(Dx);
-                D0 = sparse(zeros(obj.n ^ 2));
-                obj.D = sparse([Dy D0 D0; D0 Dy D0; D0 D0 Dy; Dx D0 D0; D0 Dx D0; D0 D0 Dx]);
-                obj.DTD = sparse(obj.D' * obj.D);
-            end
+            obj.D = sparse([Dy D0 D0; D0 Dy D0; D0 D0 Dy; Dx D0 D0; D0 Dx D0; D0 D0 Dx]);
+            obj.DTD = sparse(obj.D' * obj.D);
 
             obj.Psi = @(f)(obj.D * f);
             obj.SoftThresh = @(x, t)max(abs(x) - t, 0) .* sign(x);
@@ -63,23 +39,25 @@ classdef ADMM
         % @return: Result
         %}
         function res = reconstruction(obj, g_col, mu1, mu2, tau, splitH, splitHTH)
+            s = obj.config.getInputSize();
+            n = obj.config.getOutputSize();
             H = [splitH.H_rr, splitH.H_rg, splitH.H_rb; splitH.H_gr, splitH.H_gg, splitH.H_gb; splitH.H_br, splitH.H_bg, splitH.H_bb];
             HTH = [splitHTH.HTH_rr, splitHTH.HTH_rg, splitHTH.HTH_rb; splitHTH.HTH_gr, splitHTH.HTH_gg, splitHTH.HTH_gb; splitHTH.HTH_br, splitHTH.HTH_bg, splitHTH.HTH_bb];
 
             R_k = @(W, Z, rho_w, rho_z, G, xi)(H' * (mu1 * G - xi)) + (obj.D' * (mu2 * Z - rho_z)) + mu2 * W - rho_w; %rho_w, rho_z: lagrange multipliers
 
             % get init matrices
-            f = zeros(3 * obj.n ^ 2, 1);
-            G = zeros(3 * obj.s ^ 2, 1);
-            Z = zeros(6 * obj.n ^ 2, 1);
-            W = zeros(3 * obj.n ^ 2, 1);
-            xi = zeros(3 * obj.s ^ 2, 1);
+            f = zeros(3 * n ^ 2, 1);
+            G = zeros(3 * s ^ 2, 1);
+            Z = zeros(6 * n ^ 2, 1);
+            W = zeros(3 * n ^ 2, 1);
+            xi = zeros(3 * s ^ 2, 1);
             rho_z = mu2 * obj.Psi(f);
-            rho_w = zeros(3 * obj.n ^ 2, 1);
+            rho_w = zeros(3 * n ^ 2, 1);
 
-            temp_r = zeros(obj.n, obj.n);
-            temp_g = zeros(obj.n, obj.n);
-            temp_b = zeros(obj.n, obj.n);
+            temp_r = zeros(n, n);
+            temp_g = zeros(n, n);
+            temp_b = zeros(n, n);
 
             disp('Reconstruction begin')
             err = zeros(1, 2);
@@ -89,22 +67,18 @@ classdef ADMM
 
             disp(['Reconstructing...', ' mu1: ', num2str(mu1), ' mu2: ', num2str(mu2), ' tau: ', num2str(tau)]);
             tStart = tic;
+            strictMax = 3;
 
             while iters <= maxIter
                 tStart2 = tic;
 
                 %f_update f<-argmin_f L
-                if obj.isSparse
-                    f = (mu1 * HTH + mu2 * obj.DTD + mu2 * speye(3 * obj.n ^ 2)) \ R_k(W, Z, rho_w, rho_z, G, xi);
-                else
-                    f = (mu1 * HTH + mu2 * obj.DTD + mu2 * eye(3 * obj.n ^ 2)) \ R_k(W, Z, rho_w, rho_z, G, xi);
-                end
-
+                f = (mu1 * HTH + mu2 * obj.DTD + mu2 * speye(3 * n ^ 2)) \ R_k(W, Z, rho_w, rho_z, G, xi);
                 %Z_update z<-argmin_z L
                 Z = obj.SoftThresh(obj.Psi(f) + rho_z / mu2, tau / mu2); %Proximal operator
                 %W_update 0<=W<=1
-                W = min(max(f + rho_w / mu2, 0), 1);
-                % W = f + rho_w / mu2;
+                W = min(max(f + rho_w / mu2, 0), strictMax);
+                %W = f + rho_w / mu2;
                 %G_update
                 G = divmat * (mu1 * H * f + g_col);
                 %eta_update
@@ -129,12 +103,14 @@ classdef ADMM
             tElapsed = toc(tStart);
             disp(['Time elapsed: ' num2str(tElapsed) ' seconds.']);
 
-            resultImage = double(zeros(obj.n, obj.n, 3));
-            resultImage(:, :, 1) = temp_r;
-            resultImage(:, :, 2) = temp_g;
-            resultImage(:, :, 3) = temp_b;
+            resultImage = double(zeros(n, n, 3));
+            resultImage(:, :, 1) = (temp_r) ./ strictMax;
+            resultImage(:, :, 2) = (temp_g) ./ strictMax;
+            resultImage(:, :, 3) = (temp_b) ./ strictMax;
 
-            res = Result(resultImage, err, iters, obj.config.getThreshold(), mu1, mu2, tau);
+            g2 = H * f;
+
+            res = Result(resultImage, err, iters, obj.config.getThreshold(), mu1, mu2, tau, g2);
 
         end
 
@@ -142,9 +118,10 @@ classdef ADMM
             % Calculate error
         %}
         function [error, temp_r, temp_g, temp_b] = calc_err(obj, f, temp_r, temp_g, temp_b)
-            image_r = reshape(f(1:obj.n ^ 2, 1), [obj.n, obj.n]);
-            image_g = reshape(f(obj.n ^ 2 + 1:2 * obj.n ^ 2, 1), [obj.n, obj.n]);
-            image_b = reshape(f(2 * obj.n ^ 2 + 1:3 * obj.n ^ 2, 1), [obj.n, obj.n]);
+            n = obj.config.getOutputSize();
+            image_r = reshape(f(1:n ^ 2, 1), [n, n]);
+            image_g = reshape(f(n ^ 2 + 1:2 * n ^ 2, 1), [n, n]);
+            image_b = reshape(f(2 * n ^ 2 + 1:3 * n ^ 2, 1), [n, n]);
             diff_r = (temp_r - image_r);
             diff_g = (temp_g - image_g);
             diff_b = (temp_b - image_b);

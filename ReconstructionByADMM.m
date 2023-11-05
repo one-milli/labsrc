@@ -1,13 +1,13 @@
 %% Execute ADMM Reconstruction
 % Input size, Output size(Hadamard dim), ExpDate, Threshold
 config = Config(128, 64, '230516', 1e-2);
-objectName = 'capturewhite_R';
-mu1 = 1e2;
-mu2 = 1e-2;
+objectName = 'manekin';
+mu1 = 1e1;
+mu2 = 1e-1;
 tau = 1e-3;
-isSparse = false;
+isSparse = true;
 reconstDate = string(datetime("now"), "yyMMdd");
-note = "range0-2";
+note = "limit0-3";
 
 % read captured image and stretch
 g = imread(['../data/capture_', config.getExpDate(), '/', objectName, '.png']);
@@ -29,7 +29,7 @@ else
 end
 
 HTH = HTH(systemMatrix, isSparse);
-admm = ADMM(config, isSparse);
+admm = ADMM(config);
 
 result = admm.reconstruction(g_col, mu1, mu2, tau, systemMatrix, HTH);
 

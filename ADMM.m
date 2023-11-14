@@ -44,14 +44,13 @@ classdef ADMM
             H = [splitH.H_rr, splitH.H_rg, splitH.H_rb; splitH.H_gr, splitH.H_gg, splitH.H_gb; splitH.H_br, splitH.H_bg, splitH.H_bb];
             HTH = [splitHTH.HTH_rr, splitHTH.HTH_rg, splitHTH.HTH_rb; splitHTH.HTH_gr, splitHTH.HTH_gg, splitHTH.HTH_gb; splitHTH.HTH_br, splitHTH.HTH_bg, splitHTH.HTH_bb];
 
-            R_k = @(W, Z, rho_w, rho_z, G, xi)(H' * (mu1 * G - xi)) + (obj.D' * (mu2 * Z - rho_z)) + mu2 * W - rho_w; %rho_w, rho_z: lagrange multipliers
+            R_k = @(W, Z, rho_w, rho_z, G)(H' * (mu1 * G)) + (obj.D' * (mu2 * Z - rho_z)) + mu2 * W - rho_w; %rho_w, rho_z: lagrange multipliers
 
             % get init matrices
             f = zeros(3 * n ^ 2, 1);
             G = zeros(3 * s ^ 2, 1);
             Z = zeros(6 * n ^ 2, 1);
             W = zeros(3 * n ^ 2, 1);
-            xi = zeros(3 * s ^ 2, 1);
             rho_z = mu2 * obj.Psi(f);
             rho_w = zeros(3 * n ^ 2, 1);
 
@@ -73,7 +72,7 @@ classdef ADMM
                 tStart2 = tic;
 
                 %f_update f<-argmin_f L
-                f = (mu1 * HTH + mu2 * obj.DTD + mu2 * speye(3 * n ^ 2)) \ R_k(W, Z, rho_w, rho_z, G, xi);
+                f = (mu1 * HTH + mu2 * obj.DTD + mu2 * speye(3 * n ^ 2)) \ R_k(W, Z, rho_w, rho_z, G);
                 %Z_update z<-argmin_z L
                 Z = obj.SoftThresh(obj.Psi(f) + rho_z / mu2, tau / mu2); %Proximal operator
                 %W_update 0<=W<=1

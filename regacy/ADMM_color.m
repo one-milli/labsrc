@@ -17,16 +17,16 @@ exH = exist('H', 'var');
 
 if exH ~= 1
     % load system matrix
-    H = (load('../reconst/sparseH2.mat'));
+    H = (load('../../data/systemMatrix/H_230608.mat'));
     H = cell2mat(struct2cell(H));
 end
 
 HTH = H' * H;
 
 % read captured image and stretch
-g = imread(['../capture_230516/', object, '.png']);
+g = imread(['../../data/capture_230516/', object, '.png']);
 g = double(imresize(g(r1:r2, c1:c2, :), [s, s])) / 255;
-imwrite(g, ['../bef_reconst/cap_230516/', object, '.png'], 'BitDepth', 16)
+imwrite(g, ['../../data/bef_reconst/cap_230516/', object, '.png'], 'BitDepth', 16)
 figure(1), imshow(g);
 g_col = reshape(g, [], 1);
 
@@ -71,7 +71,9 @@ while (iters < 200)
 
     %f_update f<-argmin_f L
     tStart = tic;
-    f = ((mu1 * HTH + mu2 * DTD + mu2 * eye(3 * n ^ 2)) \ R_k(W, Z, rho_w, rho_z, G, xi));
+    f1 = gpuArray(mu1 * HTH + mu2 * DTD + mu2 * eye(3 * n ^ 2));
+    f2 = gpuArray(R_k(W, Z, rho_w, rho_z, G, xi));
+    f = f1 \ f2;
     tElapsed = toc(tStart);
     disp(tElapsed);
     %Z_update z<-argmin_z L
@@ -94,7 +96,6 @@ while (iters < 200)
     end
 
 end
-
 
 F = double(zeros(n, n, 3));
 F(:, :, 1) = temp_r;

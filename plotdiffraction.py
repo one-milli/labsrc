@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-excel_file = '../data/231031/spectrumHOE_20231031_up.xlsx'
+excel_file = '../data/231106/spectrumHOE_20231106_G.xlsx'
 df = pd.read_excel(excel_file)
 
 df1 = df['wavelength']
@@ -15,9 +15,9 @@ tolerance = 0.2  # Tolerance to find the wavelength
 plotqu = True  # Question to plot the graphs
 
 # Crop data 1080/1980
-wlength = wlength[0:1080]
-glass = glass[0:1080]
-hoe = hoe[0:1080]
+wlength = wlength[165:1016]
+glass = glass[165:1016]
+hoe = hoe[165:1016]
 
 # Diffraction efficiency estimation
 a = glass-bias

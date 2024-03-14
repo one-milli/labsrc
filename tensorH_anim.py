@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
+import localConfig
 
 n = 64
 m = 128
 
-H_tensor = np.load('../data/systemMatrix/H_matrix_tensor.npy')
+H_tensor = np.load(localConfig.DATA_PATH + 'systemMatrix/H_matrix_tensor.npy')
 print(H_tensor.shape)
 
 
@@ -19,9 +20,11 @@ for i in range(n):
                     transform=ax.transAxes, fontsize=12)
     imgs.append([img, title])
 
-ani = animation.ArtistAnimation(fig, imgs, interval=100, blit=True, repeat_delay=1000)
+ani = animation.ArtistAnimation(
+    fig, imgs, interval=100, blit=True, repeat_delay=1000)
 fig.colorbar(img)
 plt.show()
 
 # アニメーションをGIFとして保存
-ani.save("../data/240312/tensorH_anim_k_i" + str(INDEX) + ".gif", writer="pillow")
+ani.save(localConfig.DATA_PATH + "240312/tensorH_anim_k_i" +
+         str(INDEX) + ".gif", writer="pillow")

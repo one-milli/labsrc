@@ -1,18 +1,19 @@
 %% Execute ADMM Reconstruction
 % Input size, Output size(Hadamard dim), ExpDate, Threshold
-config = Config(128, 64, '230516', 1e-2);
-objectName = 'manekin';
+config = Config(128, 128, '230922', 1e-2);
+objectName = 'hadamard128_134';
 mu1 = 1e1;
 mu2 = 1e-1;
 tau = 1e-3;
 isSparse = true;
 reconstDate = string(datetime("now"), "yyMMdd");
-note = "limit0-3";
+note = "128px";
 
 % read captured image and stretch
 g = imread(['../data/capture_', config.getExpDate(), '/', objectName, '.png']);
-g = double(imresize(g(460:920, 400:860, :), [config.getInputSize(), config.getInputSize()])) / 255; % 64
+% g = double(imresize(g(460:920, 400:860, :), [config.getInputSize(), config.getInputSize()])) / 255; % 64
 % g = double(imresize(g(400:850, 400:850, :), [config.getInputSize(), config.getInputSize()])) / 255; % 128
+g = double(imresize(g, [config.getInputSize(), config.getInputSize()])) / 255; % 128
 imwrite(g, ['../data/bef_reconst/cap_', config.getExpDate(), '/', objectName, '.png'], 'BitDepth', 8)
 figure(1), imshow(g);
 g_col = reshape(g, [], 1);

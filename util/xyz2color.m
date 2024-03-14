@@ -1,6 +1,4 @@
-wl = 488;
-
-rgb = xyz2rgb([0.1655, 0.8620, 0.0422], 'OutputType', 'uint8');
+rgb = xyz2rgb([0.2148, 0.0073, 1.0391], 'OutputType', 'uint8');
 
 rgbhex = dec2hex(rgb);
 

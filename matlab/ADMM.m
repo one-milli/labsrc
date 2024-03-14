@@ -107,9 +107,9 @@ classdef ADMM
             resultImage(:, :, 2) = (temp_g) ./ strictMax;
             resultImage(:, :, 3) = (temp_b) ./ strictMax;
 
-            g2 = H * f;
+            hf = H * f;
 
-            res = Result(resultImage, err, iters, obj.config.getThreshold(), mu1, mu2, tau, g2);
+            res = Result(resultImage, err, iters, obj.config.getThreshold(), mu1, mu2, tau, hf);
 
         end
 

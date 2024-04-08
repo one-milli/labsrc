@@ -48,7 +48,7 @@ def plot_tensor(tensor, threshold, index):
 
 
 H_tensor = np.load(localConfig.DATA_PATH + 'systemMatrix/H_matrix_tensor_10p.npy')
-THRESHOLD = 0.001  # 表示する値の閾値
+THRESHOLD = 1.0e-9  # 表示する値の閾値
 
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(111, projection='3d')
@@ -69,5 +69,5 @@ def update(index):
 
 ani = FuncAnimation(fig, update, frames=range(64), interval=200)
 
-ani.save(localConfig.DATA_PATH + '240331/system_tensor_10p_ijl_0001.gif', writer='pillow')
+ani.save(localConfig.DATA_PATH + '240331/system_tensor_10p_ijl_1e-9.gif', writer='pillow')
 plt.show()

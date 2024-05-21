@@ -53,8 +53,8 @@ def plot_tensor(tensor, threshold, save_path=None):
 
 INDEX = 1
 
-H_tensor = np.load(localConfig.DATA_PATH + 'systemMatrix/H_matrix_tensor.npy')
+H_tensor = np.load(localConfig.DATA_PATH + '/systemMatrix/H_matrix_tensor.npy')
 THRESHOLD = 0.005  # 表示する値の閾値
-SAVE_PATH = localConfig.DATA_PATH + '240331/system_tensor_ijl_k' + str(INDEX)
+SAVE_PATH = localConfig.DATA_PATH + '/240331/system_tensor_ijl_k' + str(INDEX)
 
 plot_tensor(H_tensor[:, :, INDEX, :], THRESHOLD, SAVE_PATH)

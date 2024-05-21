@@ -4,7 +4,7 @@ import os
 import localConfig
 
 # 変更を行いたいフォルダのパス
-FOLDER_PATH = localConfig.DATA_PATH + 'hadamard64_cap_R_230516_128/'
+FOLDER_PATH = localConfig.DATA_PATH + '/hadamard64_cap_R_230516_128/'
 
 for filename in os.listdir(FOLDER_PATH):
     if filename.startswith("hadamard") and filename.endswith(".png"):

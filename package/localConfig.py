@@ -1,1 +1,1 @@
-DATA_PATH = '../../OneDrive - m.titech.ac.jp/Lab/data/'
+DATA_PATH = '../../OneDrive - m.titech.ac.jp/Lab/data'

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import package.localConfig
+import package.localConfig as localConfig
 
 
 def plot_tensor(tensor, threshold, save_path=None):
@@ -63,10 +63,8 @@ def plot_tensor(tensor, threshold, save_path=None):
 
 INDEX = 31
 
-H_tensor = np.load(package.localConfig.DATA_PATH +
-                   'systemMatrix/H_matrix_tensor.npy')
+H_tensor = np.load(localConfig.DATA_PATH + '/systemMatrix/H_matrix_tensor.npy')
 THRESHOLD = 0.005  # 表示する値の閾値
-SAVE_PATH = package.localConfig.DATA_PATH + \
-    '240331/system_tensor_ijl_k' + str(INDEX)
+SAVE_PATH = localConfig.DATA_PATH + '/240331/system_tensor_ijl_k' + str(INDEX)
 
 plot_tensor(H_tensor[:, :, INDEX, :], THRESHOLD)

@@ -15,7 +15,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy import sparse
-from memory_profiler import profile
 
 # %%
 # パラメータ設定
@@ -135,31 +134,30 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO):
 
 
 # %%
-def prox_l122(y: np.ndarray, gamma: float) -> np.ndarray:
-    Y = np.asarray(vector2matrixCp(y, M, N))
-    l1_norms = np.sum(np.absolute(Y), axis=1)
+def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
+    Y = cp.asarray(vector2matrixCp(y, M, N))
+    l1_norms = cp.sum(cp.absolute(Y), axis=1)
     factor = (2 * gamma) / (1 + 2 * gamma * N)
-    X = np.zeros_like(Y)
-    X = np.sign(Y) * np.maximum(np.absolute(Y) - factor * l1_norms[:, None], 0)
+    X = cp.zeros_like(Y)
+    X = cp.sign(Y) * cp.maximum(cp.absolute(Y) - factor * l1_norms[:, None], 0)
     return matrix2vectorCp(X)
 
 
-def prox_tv(y: np.ndarray, gamma: float) -> np.ndarray:
-    Dx_norm = np.linalg.norm(y.reshape(-1, 4, order="F"), axis=1).astype(np.float32)
-    Dx_norm = np.tile(Dx_norm[:, None], (1, 4))
+def prox_tv(y: cp.ndarray, gamma: float) -> cp.ndarray:
+    Dx_norm = cp.linalg.norm(y.reshape(-1, 4, order="F"), axis=1).astype(cp.float32)
+    Dx_norm = cp.tile(Dx_norm[:, None], (1, 4))
 
-    prox = np.maximum(1 - gamma / Dx_norm, 0) * y.reshape(-1, 4, order="F")
+    prox = cp.maximum(1 - gamma / Dx_norm, 0) * y.reshape(-1, 4, order="F")
     prox = prox.reshape(-1, order="F")
 
     return prox
 
 
-def prox_conj(prox: Callable[[np.ndarray, float], np.ndarray], x: np.ndarray, gamma: float) -> np.ndarray:
+def prox_conj(prox: Callable[[cp.ndarray, float], cp.ndarray], x: cp.ndarray, gamma: float) -> cp.ndarray:
     """Conjugate proximal operator."""
     return x - gamma * prox(x / gamma, 1 / gamma)
 
 
-@profile
 def primal_dual_splitting(
     X: cp.ndarray,
     g: cp.ndarray,
@@ -204,12 +202,12 @@ def primal_dual_splitting(
         buf1 = h_old - tau * (grad - mult_DijklT(y_old))
         del grad
         print("calculate buf1")
-        h = cp.asarray(prox_l122(cp.asnumpy(buf1), tau * lambda1))
+        h = prox_l122(buf1, tau * lambda1)
         del buf1
         print("calculate h")
 
         # Update dual variable y
-        y = cp.asarray(prox_conj(prox_tv, cp.asnumpy(y_old + sigma * mult_Dijkl(2 * h - h_old)), sigma / lambda2))
+        y = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old), sigma / lambda2)
         print("calculate y")
 
         end = time.perf_counter()

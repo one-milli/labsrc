@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-excel_file = '../data/231106/spectrumHOE_20231106_G.xlsx'
+excel_file = '../../OneDrive - m.titech.ac.jp/Lab/data/240807/spectrumHOE_20240807_2.xlsx'
 df = pd.read_excel(excel_file)
 
 df1 = df['wavelength']

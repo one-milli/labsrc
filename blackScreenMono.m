@@ -47,26 +47,21 @@ vid.TriggerRepeat = Inf;
 start(vid);
 
 sta = 1;
-fin = nn;
-
-%% Load Hadamard
-hadamard = zeros(n, n, nn);
-
-for k = sta:fin
-    input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/Hadamard', int2str(n), '_input/hadamard', int2str(k), '.png']));
-    input = imresize(input, [n, n]);
-    hadamard(:, :, k) = input;
-end
+fin = 16;
 
 %% capture white
 if sta == 1
+    input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/Hadamard', int2str(n), '_input/hadamard', int2str(1), '.png']));
+    input = imresize(input, [n, n]);
+    hadamard_temp = input;
+
     Line = zeros(wy_pro, wx_pro);
 
     for i = 1:n
 
         for j = 1:n
             temp = zeros(mg, mg);
-            temp(:) = hadamard(j, i, 1);
+            temp(:) = hadamard_temp(j, i);
             Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg) = temp;
         end
 
@@ -81,38 +76,56 @@ if sta == 1
     img = getdata(vid, 1);
 
     imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/capturewhite.png'], 'BitDepth', 8);
+
+    clear hadamard_temp;
 end
 
 %% capture
-for k = sta:fin
-    Line = zeros(wy_pro, wx_pro);
+chunk_size = 4;
 
-    for i = 1:n
+for chunk_start = sta:chunk_size:fin
+    chunk_end = min(chunk_start + chunk_size - 1, fin);
 
-        for j = 1:n
-            temp = zeros(mg, mg);
-            temp(:) = hadamard(j, i, k);
-            Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg) = temp;
+    hadamard = zeros(n, n, chunk_end - chunk_start + 1);
+
+    for k = chunk_start:chunk_end
+        input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/Hadamard', int2str(n), '_input/hadamard', int2str(k), '.png']));
+        input = imresize(input, [n, n]);
+        hadamard(:, :, k - chunk_start + 1) = input;
+    end
+
+    for k = chunk_start:chunk_end
+        Line = zeros(wy_pro, wx_pro);
+
+        for i = 1:n
+
+            for j = 1:n
+                temp = zeros(mg, mg);
+                temp(:) = hadamard(j, i, k - chunk_start + 1);
+                Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg) = temp;
+            end
+
         end
 
+        disp(['i = ', int2str(k)])
+
+        imshow(Line, 'Parent', ha);
+
+        if k == sta
+            pause(2)
+        else
+            pause(1)
+        end
+
+        trigger(vid);
+        img = getdata(vid, 1);
+        img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
+        img = imresize(img, [256 256]);
+
+        imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_', expDate, '/hadamard_', int2str(k), '.png'], 'BitDepth', 8);
     end
 
-    disp(['i = ', int2str(k)])
-
-    imshow(Line, 'Parent', ha);
-
-    if k == sta
-        pause(2)
-    else
-        pause(1)
-    end
-
-    trigger(vid);
-    img = getdata(vid, 1);
-    img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
-    img = imresize(img, [256 256]);
-
-    imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_', expDate, '/hadamard_', int2str(k), '.png'], 'BitDepth', 8);
+    clear hadamard;
 end
 
 %% Stop camera

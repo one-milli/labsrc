@@ -1,12 +1,11 @@
 %% Simulate the capture of the patterns and their use for binary search
 imaqreset
 
-config = Config(128, 64, '240814', 1e-2);
 expDate = '240814';
-trimRowFrom = 400;
+trimRowFrom = 351;
 trimRowTo = 850;
-trimColFrom = 400;
-trimColTo = 850;
+trimColFrom = 371;
+trimColTo = 870;
 n = 128;
 nn = n * n;
 
@@ -35,29 +34,29 @@ set(0, 'defaultfigureposition', rect_pro);
 h = figure('Units', 'pixels', 'DockControls', 'off', 'MenuBar', 'none', 'ToolBar', 'none');
 ha = axes('Parent', h, 'Units', 'pixels', 'Position', [1 1 wx_pro wy_pro]);
 
-sta = 2;
-fin = 2;
+%% Camera Settings
+Cam_mode = 'F7_Mono8_1288x964_Mode0';
+vid = videoinput('pointgrey', 1, Cam_mode);
+src = getselectedsource(vid);
+mg = 3; %magnification
+ulc = 500;
+ulr = 750;
+vid.FramesPerTrigger = 1;
+triggerconfig(vid, 'manual');
+vid.TriggerRepeat = Inf;
+start(vid);
+
+sta = 1;
+fin = nn;
 
 %% Load Hadamard
 hadamard = zeros(n, n, nn);
 
 for k = sta:fin
-    input = uint8(imread(['../data/Hadamard', int2str(n), '_input/hadamard', int2str(k), '.png']));
+    input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/Hadamard', int2str(n), '_input/hadamard', int2str(k), '.png']));
     input = imresize(input, [n, n]);
     hadamard(:, :, k) = input;
 end
-
-%% Camera Settings
-Cam_mode = 'F7_RGB_1280x1024_Mode0';
-vid = videoinput('pointgrey', 1, Cam_mode);
-src = getselectedsource(vid);
-mg = 2; %magnification
-ulc = 500;
-ulr = 860;
-vid.FramesPerTrigger = 1;
-triggerconfig(vid, 'manual');
-vid.TriggerRepeat = Inf;
-start(vid);
 
 %% capture white
 if sta == 1
@@ -81,13 +80,12 @@ if sta == 1
     trigger(vid);
     img = getdata(vid, 1);
 
-    imwrite(img, ['../data/capture_', expDate, '/capturewhite.png'], 'BitDepth', 8);
+    imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/capturewhite.png'], 'BitDepth', 8);
 end
 
 %% capture
 for k = sta:fin
-
-    Line = zeros(wy_pro, wx_pro, 3);
+    Line = zeros(wy_pro, wx_pro);
 
     for i = 1:n
 
@@ -106,15 +104,15 @@ for k = sta:fin
     if k == sta
         pause(2)
     else
-        pause(0.5)
+        pause(1)
     end
 
     trigger(vid);
     img = getdata(vid, 1);
-    img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo, :);
+    img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
+    img = imresize(img, [256 256]);
 
-    imwrite(img, ['../data/hadamard', int2str(n), '_cap_', expDate, '/hadamard_', int2str(k), '.png'], 'BitDepth', 8);
-
+    imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_', expDate, '/hadamard_', int2str(k), '.png'], 'BitDepth', 8);
 end
 
 %% Stop camera

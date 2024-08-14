@@ -1,8 +1,8 @@
 %% Simulate the capture of the patterns and their use for binary search
 imaqreset
 
-config = Config(128, 64, '230922', 1e-2);
-expDate = '230922';
+config = Config(128, 64, '240814', 1e-2);
+expDate = '240814';
 trimRowFrom = 400;
 trimRowTo = 850;
 trimColFrom = 400;
@@ -87,49 +87,33 @@ end
 %% capture
 for k = sta:fin
 
-    for col = 1:3
+    Line = zeros(wy_pro, wx_pro, 3);
 
-        Line = zeros(wy_pro, wx_pro, 3);
+    for i = 1:n
 
-        for i = 1:n
-
-            for j = 1:n
-                temp = zeros(mg, mg);
-                temp(:) = hadamard(j, i, k);
-                Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg, col) = temp;
-            end
-
-        end
-
-        if col == 1
-            disp(['R ', int2str(k)])
-        elseif col == 2
-            disp(['G ', int2str(k)])
-        else
-            disp(['B ', int2str(k)])
-        end
-
-        imshow(Line, 'Parent', ha);
-
-        if k == sta
-            pause(2)
-        else
-            pause(0.5)
-        end
-
-        trigger(vid);
-        img = getdata(vid, 1);
-        img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo, :);
-
-        if col == 1
-            imwrite(img, ['../data/hadamard_cap_R_', expDate, '/hadamard', int2str(n), '_', int2str(k), '.png'], 'BitDepth', 8);
-        elseif col == 2
-            imwrite(img, ['../data/hadamard_cap_G_', expDate, '/hadamard', int2str(n), '_', int2str(k), '.png'], 'BitDepth', 8);
-        else
-            imwrite(img, ['../data/hadamard_cap_B_', expDate, '/hadamard', int2str(n), '_', int2str(k), '.png'], 'BitDepth', 8);
+        for j = 1:n
+            temp = zeros(mg, mg);
+            temp(:) = hadamard(j, i, k);
+            Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg) = temp;
         end
 
     end
+
+    disp(['i = ', int2str(k)])
+
+    imshow(Line, 'Parent', ha);
+
+    if k == sta
+        pause(2)
+    else
+        pause(0.5)
+    end
+
+    trigger(vid);
+    img = getdata(vid, 1);
+    img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo, :);
+
+    imwrite(img, ['../data/hadamard', int2str(n), '_cap_', expDate, '/hadamard_', int2str(k), '.png'], 'BitDepth', 8);
 
 end
 

@@ -51,8 +51,8 @@ fin = 16;
 
 %% capture white
 if sta == 1
-    input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image128/Cameraman.png']));
-    input = imresize(input, [n, n]);
+    input = uint8(imread('../../OneDrive - m.titech.ac.jp/Lab/data/sample_image128/Cameraman.png'));
+    input = imresize(input, [n, n]) / 255;
     hadamard_temp = input;
 
     Line = zeros(wy_pro, wx_pro);

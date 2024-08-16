@@ -46,37 +46,35 @@ triggerconfig(vid, 'manual');
 vid.TriggerRepeat = Inf;
 start(vid);
 
-sta = 1;
-fin = 16;
-
 %% capture
-if sta == 1
-    input = uint8(imread('../../OneDrive - m.titech.ac.jp/Lab/data/sample_image128/Cameraman.png'));
-    input = imresize(input, [n, n]);
-    image_disp = input;
+filename = 'Cameraman';
+input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image128/', filename, '.png']));
+input = imresize(input, [n, n]);
+image_disp = input;
 
-    Line = zeros(wy_pro, wx_pro);
+Line = zeros(wy_pro, wx_pro);
 
-    for i = 1:n
+for i = 1:n
 
-        for j = 1:n
-            temp = zeros(mg, mg);
-            temp(:) = image_disp(j, i);
-            Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg) = temp;
-        end
-
+    for j = 1:n
+        temp = zeros(mg, mg);
+        temp(:) = image_disp(j, i);
+        Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg) = temp;
     end
 
-    disp('snapshot')
-    imshow(uint8(Line), 'Parent', ha);
-
-    pause(2)
-
-    trigger(vid);
-    img = getdata(vid, 1);
-
-    imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/Cameraman.png'], 'BitDepth', 8);
 end
+
+disp('snapshot')
+imshow(uint8(Line), 'Parent', ha);
+
+pause(2)
+
+trigger(vid);
+img = getdata(vid, 1);
+img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
+img = imresize(img, [256 256]);
+
+imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/', filename, '.png'], 'BitDepth', 8);
 
 %% Stop camera
 stop(vid);

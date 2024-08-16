@@ -47,7 +47,7 @@ vid.TriggerRepeat = Inf;
 start(vid);
 
 sta = 1;
-fin = 16;
+fin = nn;
 
 %% capture white
 if sta == 1
@@ -81,7 +81,7 @@ if sta == 1
 end
 
 %% capture
-chunk_size = 4;
+chunk_size = 64;
 
 for chunk_start = sta:chunk_size:fin
     chunk_end = min(chunk_start + chunk_size - 1, fin);

@@ -49,11 +49,11 @@ start(vid);
 sta = 1;
 fin = 16;
 
-%% capture white
+%% capture
 if sta == 1
     input = uint8(imread('../../OneDrive - m.titech.ac.jp/Lab/data/sample_image128/Cameraman.png'));
-    input = imresize(input, [n, n]) / 255;
-    hadamard_temp = input;
+    input = imresize(input, [n, n]);
+    image_disp = input;
 
     Line = zeros(wy_pro, wx_pro);
 
@@ -61,14 +61,14 @@ if sta == 1
 
         for j = 1:n
             temp = zeros(mg, mg);
-            temp(:) = hadamard_temp(j, i);
+            temp(:) = image_disp(j, i);
             Line(ulc + (j - 1) * mg + 1:ulc + j * mg, ulr + (i - 1) * mg + 1:ulr + i * mg) = temp;
         end
 
     end
 
-    disp('capture white')
-    imshow(Line, 'Parent', ha);
+    disp('snapshot')
+    imshow(uint8(Line), 'Parent', ha);
 
     pause(2)
 
@@ -76,8 +76,6 @@ if sta == 1
     img = getdata(vid, 1);
 
     imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/Cameraman.png'], 'BitDepth', 8);
-
-    clear hadamard_temp;
 end
 
 %% Stop camera

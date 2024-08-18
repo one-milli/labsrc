@@ -3,6 +3,7 @@
 import os
 import re
 import numpy as np
+import matplotlib.pyplot as plt
 from PIL import Image
 
 
@@ -10,7 +11,8 @@ class SystemMatrixMono:
     def __init__(self, data_path, pattern_name):
         self.data_path = data_path
         self.pattern_name = pattern_name
-        self.n = 64
+        self.n = 128
+        self.m = 256
 
     def load_images(self, folder_path):
         files = os.listdir(folder_path)
@@ -27,6 +29,30 @@ class SystemMatrixMono:
     def generate(self):
         F = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_input/")
         G = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_cap_240814/")
-        H = (G @ F.T) / (self.n**2)
+        res = (G @ F.T) / (self.n**2)
 
-        return H
+        return res
+
+
+if __name__ == "__main__":
+    DATA_PATH = "../data"
+    PATTERN_NAME = "hadamard"
+
+    sm = SystemMatrixMono(DATA_PATH, PATTERN_NAME)
+    H = sm.generate()
+    # np.save(f"{DATA_PATH}/H_matrix_true.npy", H)
+
+    SAMPLE_NAME = "Cameraman"
+    sample_image = Image.open(f"{DATA_PATH}/sample_image{sm.n}/{SAMPLE_NAME}.png").convert("L")
+    sample_image = np.asarray(sample_image).flatten() / 255
+
+    Hf = H @ sample_image
+    Hf_img = Hf.reshape(sm.m, sm.m)
+    Hf_img = np.clip(Hf_img, 0, 1)
+    Hf_pil = Image.fromarray((Hf_img * 255).astype(np.uint8), mode="L")
+
+    fig, ax = plt.subplots(figsize=Hf_img.shape[::-1], dpi=1, tight_layout=True)
+    ax.imshow(Hf_pil, cmap="gray")
+    ax.axis("off")
+    fig.savefig(f"{DATA_PATH}/240818/{SAMPLE_NAME}.png", dpi=1)
+    plt.show()

@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 
 
-class SystemMatrix:
+class SystemMatrixRgb:
     def __init__(self, data_path, pattern_name):
         self.data_path = data_path
         self.pattern_name = pattern_name

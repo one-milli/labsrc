@@ -1,5 +1,5 @@
-m = 16; %control the size of hadamard image
-b = 4; % <m-1> can be expressed with <b> bit
+m = 128; %control the size of hadamard image
+b = 7; % <m-1> can be expressed with <b> bit
 % S = ones(m, m, m ^ 2);
 
 n = 1;
@@ -22,7 +22,7 @@ for vidx = 0:m - 1
         axis off;
 %}
 
-        imwrite(F, ['../data/Hadamard', int2str(m), '_input/hadamard_', int2str(n), '.png'])
+        imwrite(F, ['../../OneDrive - m.titech.ac.jp/Lab/data/Hadamard', int2str(m), '_input/hadamard_', int2str(n), '.png'])
         n = n + 1;
     end
 

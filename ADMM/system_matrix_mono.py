@@ -14,21 +14,28 @@ class SystemMatrixMono:
         self.n = 128
         self.m = 256
 
-    def load_images(self, folder_path):
+    def load_images(self, folder_path, is_f=True):
         files = os.listdir(folder_path)
         files.sort(key=lambda f: int(re.search(rf"{self.pattern_name}_(\d+).png", f).group(1)))
         images = []
 
-        for file in files:
-            one = np.ones((self.n, self.n))
-            img = np.asarray(Image.open(os.path.join(folder_path, file)))
-            img_vec = (2 * img - one).flatten()
-            images.append(img_vec)
-        return np.column_stack(images)
+        if is_f:
+            for file in files:
+                one = np.ones((self.n, self.n))
+                img = np.asarray(Image.open(os.path.join(folder_path, file)))
+                img_vec = (2 * img - one).flatten()
+                images.append(img_vec)
+            return np.column_stack(images)
+        else:
+            white = np.asarray(Image.open(os.path.join(folder_path, "hadamard_1.png"))) / 255
+            for file in files:
+                img = np.asarray(Image.open(os.path.join(folder_path, file))) / 255
+                img_vec = (2 * img - white).flatten()
+            return np.column_stack(images)
 
     def generate(self):
         F = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_input/")
-        G = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_cap_240814/")
+        G = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_cap_240814/", is_f=False)
         res = (G @ F.T) / (self.n**2)
 
         return res

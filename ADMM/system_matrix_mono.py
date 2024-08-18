@@ -31,6 +31,7 @@ class SystemMatrixMono:
             for file in files:
                 img = np.asarray(Image.open(os.path.join(folder_path, file))) / 255
                 img_vec = (2 * img - white).flatten()
+                images.append(img_vec)
             return np.column_stack(images)
 
     def generate(self):

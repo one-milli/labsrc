@@ -4,8 +4,6 @@ min_f ||g-Hf||^2 + tau*||Df||_1 + i(f)
 """
 
 import cupy as cp  # NumPyの代わりにCuPyをインポート
-import cupyx.scipy.sparse as csp  # SciPyのスパース行列モジュールをCuPyで置き換え
-import cupyx.scipy.sparse.linalg as cspla  # SciPyのスパース線形代数モジュールをCuPyで置き換え
 
 
 class Admm:
@@ -15,9 +13,9 @@ class Admm:
     mu3 = 1e-1
 
     def __init__(self, H, g, D, tau):
-        self.H = csp.csr_matrix(cp.asarray(H))
+        self.H = cp.asarray(H)
         self.g = cp.asarray(g)
-        self.D = csp.csr_matrix(cp.asarray(D))
+        self.D = cp.asarray(D)
         self.tau = tau
         self.HTH = self.H.T @ self.H
         self.DTD = self.D.T @ self.D
@@ -38,7 +36,7 @@ class Admm:
         return cp.maximum(0, cp.abs(x) - sigma) * cp.sign(x)
 
     def compute_obj(self):
-        return cp.linalg.norm(self.g - self.H @ self.f) ** 2 + self.eta * cspla.norm(self.D @ self.f, 1)
+        return cp.linalg.norm(self.g - self.H @ self.f) ** 2 + self.eta * cp.linalg.norm(self.D @ self.f, 1)
 
     def compute_err(self, f):
         return cp.linalg.norm(f - self.f)
@@ -52,7 +50,7 @@ class Admm:
         )
 
     def update_f(self):
-        self.f = cspla.spsolve(self.HTH + self.mu2 * self.DTD + self.mu3 * csp.eye(self.m, self.m), self.r)
+        self.f = cp.linalg.inv(self.HTH + self.mu2 * self.DTD + self.mu3 * cp.eye(self.m, self.m)).dot(self.r)
 
     def update_z(self):
         self.z = self.soft_threshold(self.D @ self.f + self.eta / self.mu2, self.tau / self.mu2)

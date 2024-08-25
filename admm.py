@@ -8,10 +8,10 @@ import cupy as cp
 
 class Admm:
     max_iter = 500
-    mu1 = 1e-5
-    mu2 = 1e-4
-    mu3 = 1e-4
-    tol = 1e-5
+    mu1 = 1e-6
+    mu2 = 1e-5
+    mu3 = 1e-5
+    tol = 1e-6
 
     def __init__(self, H, g, D, tau):
         self.H = cp.asarray(H)
@@ -22,7 +22,7 @@ class Admm:
         self.DTD = self.D.T @ self.D
         self.m, self.n = self.H.shape
         self.r = cp.zeros((self.n, 1))
-        self.f = cp.ones((self.n, 1)) / 2
+        self.f = cp.ones((self.n, 1))
         self.z = cp.zeros((self.D.shape[0], 1))
         self.y = cp.zeros((self.m, 1))
         self.w = cp.zeros((self.n, 1))

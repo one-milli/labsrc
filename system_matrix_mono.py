@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     sm = SystemMatrixMono(DATA_PATH, PATTERN_NAME)
     H = sm.generate()
-    np.save(f"{DATA_PATH}/systemMatrix/H_matrix_gf.npy", H)
+    np.save(f"{DATA_PATH}/240825/systemMatrix/H_matrix_gf.npy", H)
 
     SAMPLE_NAME = "Cameraman"
     sample_image = Image.open(f"{DATA_PATH}/sample_image{sm.n}/{SAMPLE_NAME}.png").convert("L")

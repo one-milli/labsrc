@@ -56,11 +56,7 @@ if __name__ == "__main__":
 
     sm = SystemMatrixMono(DATA_PATH, PATTERN_NAME)
     H = sm.generate()
-    # np.save(f"{DATA_PATH}/systemMatrix/H_matrix_gf.npy", H)
-    H[abs(H) < 1e-4] = 0
-    H = sps.csr_matrix(H)
-    sio.mmwrite(f"{DATA_PATH}/240825/systemMatrix/H_sparse_gf.mtx", H)
-    print(sio.mminfo(f"{DATA_PATH}/240825/systemMatrix/H_sparse_gf.mtx"))
+    np.save(f"{DATA_PATH}/systemMatrix/H_matrix_gf.npy", H)
 
     SAMPLE_NAME = "Cameraman"
     sample_image = Image.open(f"{DATA_PATH}/sample_image{sm.n}/{SAMPLE_NAME}.png").convert("L")

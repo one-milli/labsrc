@@ -11,6 +11,7 @@ class Admm:
     mu1 = 1e-5
     mu2 = 1e-4
     mu3 = 1e-4
+    tol = 1e-5
 
     def __init__(self, H, g, D, tau):
         self.H = cp.asarray(H)
@@ -87,6 +88,6 @@ class Admm:
                 err_diff = error
             self.err.append(error)
             print("iter =", i, "err =", error, "diff =", err_diff)
-            if err_diff < 1e-4:
+            if err_diff < self.tol:
                 break
         return cp.asnumpy(self.f), self.err

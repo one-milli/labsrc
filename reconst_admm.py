@@ -8,9 +8,9 @@ import admm
 # %%
 # DATA_PATH = '../../../OneDrive - m.titech.ac.jp/Lab/data'
 DATA_PATH = "../data"
-OBJ_NAME = "Text"
-H_SETTING = "hadamard_FISTA_l122_p-10_lmd-100"
-# H_SETTING = "gf"
+OBJ_NAME = "Cameraman"
+# H_SETTING = "hadamard_FISTA_l122_p-10_lmd-100"
+H_SETTING = "gf"
 n = 128
 m = 256
 tau = 1e1
@@ -46,6 +46,7 @@ def createDmono(n):
 
 # D = createDrgb(n)
 D = createDmono(n)
+D = D.toarray()
 print("Created D")
 
 # %%
@@ -56,13 +57,11 @@ captured = np.array(captured)
 g = captured.reshape(-1, 1)
 
 # %%
-# H = np.load(f"{DATA_PATH}/systemMatrix/H_matrix_{SETTING}.npy")
-H = sio.mmread(f"{DATA_PATH}/240825/systemMatrix/H_sparse_{H_SETTING}.mtx").tocsr()
-print(sio.mminfo(f"{DATA_PATH}/240825/systemMatrix/H_sparse_{H_SETTING}.mtx"))
-
-# %%
-H = H.toarray()
-D = D.toarray()
+H = np.load(f"{DATA_PATH}/systemMatrix/H_matrix_{H_SETTING}.npy")
+print("H shape:", H.shape, "type(H):", type(H))
+# H = sio.mmread(f"{DATA_PATH}/240825/systemMatrix/H_sparse_{H_SETTING}.mtx").tocsr()
+# print(sio.mminfo(f"{DATA_PATH}/240825/systemMatrix/H_sparse_{H_SETTING}.mtx"))
+# H = H.toarray()
 
 # %%
 admm = admm.Admm(H, g, D, tau)

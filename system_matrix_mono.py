@@ -51,7 +51,7 @@ if __name__ == "__main__":
     H = sm.generate()
     H[abs(H) < 1e-5] = 0
     H = sps.csr_matrix(H)
-    sio.mmwrite(f"{DATA_PATH}/systemMatrix/H_sparse_gf.mtx", H)
+    sio.mmwrite(f"{DATA_PATH}/240825/systemMatrix/H_sparse_gf.mtx", H)
     # np.save(f"{DATA_PATH}/systemMatrix/H_matrix_gf.npy", H)
 
     SAMPLE_NAME = "Cameraman"

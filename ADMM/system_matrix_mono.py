@@ -3,6 +3,7 @@
 import os
 import re
 import numpy as np
+import scipy.io as sio
 import matplotlib.pyplot as plt
 from PIL import Image
 
@@ -25,14 +26,13 @@ class SystemMatrixMono:
                 img = np.asarray(Image.open(os.path.join(folder_path, file)))
                 img_vec = (2 * img - one).flatten()
                 images.append(img_vec)
-            return np.column_stack(images)
         else:
             white = np.asarray(Image.open(os.path.join(folder_path, "hadamard_1.png"))) / 255
             for file in files:
                 img = np.asarray(Image.open(os.path.join(folder_path, file))) / 255
                 img_vec = (2 * img - white).flatten()
                 images.append(img_vec)
-            return np.column_stack(images)
+        return np.column_stack(images)
 
     def generate(self):
         F = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_input/")
@@ -48,7 +48,9 @@ if __name__ == "__main__":
 
     sm = SystemMatrixMono(DATA_PATH, PATTERN_NAME)
     H = sm.generate()
-    # np.save(f"{DATA_PATH}/H_matrix_true.npy", H)
+    H[abs(H) < 1e-5] = 0
+    sio.mmwrite(f"{DATA_PATH}/systemMatrix/H_matrix_gf.mtx", H)
+    # np.save(f"{DATA_PATH}/systemMatrix/H_matrix_gf.npy", H)
 
     SAMPLE_NAME = "Cameraman"
     sample_image = Image.open(f"{DATA_PATH}/sample_image{sm.n}/{SAMPLE_NAME}.png").convert("L")

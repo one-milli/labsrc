@@ -7,11 +7,11 @@ import cupy as cp
 
 
 class Admm:
-    max_iter = 500
-    mu1 = 1e-6
-    mu2 = 1e-5
-    mu3 = 1e-5
-    tol = 1e-6
+    max_iter = 300
+    mu1 = 1e-5
+    mu2 = 1e-4
+    mu3 = 1e-4
+    tol = 1e-5
 
     def __init__(self, H, g, D, tau):
         self.H = cp.asarray(H)

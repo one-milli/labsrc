@@ -3,6 +3,7 @@
 import os
 import re
 import numpy as np
+import scipy.sparse as sps
 import scipy.io as sio
 import matplotlib.pyplot as plt
 from PIL import Image
@@ -49,6 +50,7 @@ if __name__ == "__main__":
     sm = SystemMatrixMono(DATA_PATH, PATTERN_NAME)
     H = sm.generate()
     H[abs(H) < 1e-5] = 0
+    H = sps.csr_matrix(H)
     sio.mmwrite(f"{DATA_PATH}/systemMatrix/H_sparse_gf.mtx", H)
     # np.save(f"{DATA_PATH}/systemMatrix/H_matrix_gf.npy", H)
 

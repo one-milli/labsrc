@@ -63,9 +63,7 @@ if __name__ == "__main__":
     sample_image = Image.open(f"{DATA_PATH}/sample_image{sm.n}/{SAMPLE_NAME}.png").convert("L")
     sample_image = np.asarray(sample_image).flatten() / 255
 
-    sample_image_gpu = cp.asarray(sample_image)
-    Hf = cp.asnumpy(H @ sample_image_gpu)
-
+    Hf = H @ sample_image
     Hf_img = Hf.reshape(sm.m, sm.m)
     Hf_img = np.clip(Hf_img, 0, 1)
     Hf_pil = Image.fromarray((Hf_img * 255).astype(np.uint8), mode="L")

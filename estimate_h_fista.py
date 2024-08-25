@@ -177,6 +177,7 @@ h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l122)
 # %%
 H = vector2matrixNp(h, M, N)
 np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
+print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 # H[np.abs(H) < 1e-5] = 0
 # H = sps.csr_matrix(H)
 # sio.mmwrite(f"{DIRECTORY}/systemMatrix/H_sparse_{SETTING}.mtx", H)

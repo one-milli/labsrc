@@ -18,19 +18,19 @@ from scipy import sparse
 
 # %%
 # パラメータ設定
-n = 64
-m = 128
+n = 128
+m = 256
 N = n**2
 M = m**2
 LAMBDA1 = 10
 LAMBDA2 = 1
-SEED = 3
+SEED = 5
 RATIO = 0.1
 ITER = 500
 # DATA_PATH = "../../OneDrive - m.titech.ac.jp/Lab/data"
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
-DIRECTORY = DATA_PATH + "/240818"
+DIRECTORY = DATA_PATH + "/240825"
 SETTING = f"{IMG_NAME}_pr-du_p-{int(100*RATIO)}_lmd1-{LAMBDA1}_lmd2-{LAMBDA2}_iter-{ITER}"
 
 if not os.path.exists(DIRECTORY):
@@ -38,6 +38,7 @@ if not os.path.exists(DIRECTORY):
 if not os.path.exists(DIRECTORY + "/systemMatrix"):
     os.makedirs(DIRECTORY + "/systemMatrix")
 
+# %%
 Di = sparse.eye(M, format="lil") - sparse.eye(M, k=m, format="lil")
 Di[-m:, :] = 0
 Di = Di.tocsr()
@@ -262,28 +263,34 @@ def primal_dual_splitting(
 
 # %%
 # load images
-G, _ = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_cap_R_230516_128/")
+INFO = "cap_240814"
+G, use = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/")
 F, _ = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/")
 print("K=", F.shape[1])
-white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_cap_R_230516_128/{IMG_NAME}_1.png")
-white_img = white_img.convert("L")
-white_img = np.asarray(white_img) / 255
-white = white_img.flatten()
+white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")
+white = np.asarray(white_img).flatten() / 255
 white = white[:, np.newaxis]
 H1 = np.tile(white, F.shape[1])
 F_hat = 2 * F - 1
-g = matrix2vectorNp(2 * G - H1)
+G_hat = 2 * G - H1
+
+g = matrix2vectorNp(G_hat)
 
 # %%
 F_hat_T_gpu = cp.asarray(F_hat.T).astype(cp.float32)
 g_gpu = cp.asarray(g).astype(cp.float32)
+del F, G, H1, F_hat, G_hat
+
+# %%
 h, info = primal_dual_splitting(F_hat_T_gpu, g_gpu, LAMBDA1, LAMBDA2)
 
 # %%
 H = vector2matrixNp(h, M, N)
-# np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
+np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
+print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 
-sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/Cameraman.png").convert("L")
+SAMPLE_NAME = "Cameraman"
+sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert("L")
 sample_image = np.asarray(sample_image).flatten() / 255
 
 Hf = H @ sample_image
@@ -291,7 +298,7 @@ Hf_img = Hf.reshape(m, m)
 Hf_img = np.clip(Hf_img, 0, 1)
 Hf_pil = Image.fromarray((Hf_img * 255).astype(np.uint8), mode="L")
 
-FILENAME = f"{SETTING}.png"
+FILENAME = f"{SAMPLE_NAME}_{SETTING}.png"
 fig, ax = plt.subplots(figsize=Hf_img.shape[::-1], dpi=1, tight_layout=True)
 ax.imshow(Hf_pil, cmap="gray")
 ax.axis("off")
@@ -299,6 +306,6 @@ fig.savefig(f"{DIRECTORY}/{FILENAME}", dpi=1)
 plt.show()
 
 # %%
-H_true = np.load(f"{DATA_PATH}/systemMatrix/H_matrix_true.npy")
-rem = np.linalg.norm(H_true - H, "fro")
-print(rem)
+# H_true = np.load(f"{DATA_PATH}/systemMatrix/H_matrix_true.npy")
+# rem = np.linalg.norm(H_true - H, "fro")
+# print(rem)

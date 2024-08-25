@@ -37,12 +37,12 @@ class SystemMatrixMono:
         return np.column_stack(images)
 
     def generate(self):
-        F = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_input/")
-        G = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_cap_240814/", is_f=False)
+        F = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_input/").astype(np.int8)
+        G = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_cap_240814/", is_f=False).astype(np.float32)
         F_gpu = cp.asarray(F)
         G_gpu = cp.asarray(G)
 
-        res_gpu = (G_gpu @ F_gpu.T) / (self.n**2)
+        res_gpu = ((G_gpu @ F_gpu.T) / (self.n**2)).astype(np.float32)
         res = cp.asnumpy(res_gpu)
 
         return res

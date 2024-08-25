@@ -1,4 +1,4 @@
-"""Generate system matrix from mono images"""
+"""Generate system matrix from mono images analytically"""
 
 import os
 import re
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     sm = SystemMatrixMono(DATA_PATH, PATTERN_NAME)
     H = sm.generate()
     H[abs(H) < 1e-5] = 0
-    sio.mmwrite(f"{DATA_PATH}/systemMatrix/H_matrix_gf.mtx", H)
+    sio.mmwrite(f"{DATA_PATH}/systemMatrix/H_sparse_gf.mtx", H)
     # np.save(f"{DATA_PATH}/systemMatrix/H_matrix_gf.npy", H)
 
     SAMPLE_NAME = "Cameraman"
@@ -64,5 +64,5 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(figsize=Hf_img.shape[::-1], dpi=1, tight_layout=True)
     ax.imshow(Hf_pil, cmap="gray")
     ax.axis("off")
-    fig.savefig(f"{DATA_PATH}/240818/{SAMPLE_NAME}.png", dpi=1)
+    fig.savefig(f"{DATA_PATH}/240825/{SAMPLE_NAME}.png", dpi=1)
     plt.show()

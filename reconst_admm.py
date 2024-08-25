@@ -58,7 +58,7 @@ g = captured.reshape(-1, 1)
 
 # %%
 H = np.load(f"{DATA_PATH}/240825/systemMatrix/H_matrix_{H_SETTING}.npy")
-print("H shape:", H.shape, "type(H):", type(H))
+print("H shape:", H.shape, "type(H):", type(H), "H.dtype:", H.dtype)
 # H = sio.mmread(f"{DATA_PATH}/240825/systemMatrix/H_sparse_{H_SETTING}.mtx").tocsr()
 # print(sio.mminfo(f"{DATA_PATH}/240825/systemMatrix/H_sparse_{H_SETTING}.mtx"))
 # H = H.toarray()

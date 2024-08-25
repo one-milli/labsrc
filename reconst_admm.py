@@ -9,8 +9,8 @@ import admm
 # DATA_PATH = '../../../OneDrive - m.titech.ac.jp/Lab/data'
 DATA_PATH = "../data"
 OBJ_NAME = "Cameraman"
-# H_SETTING = "hadamard_FISTA_l122_p-10_lmd-100"
-H_SETTING = "gf"
+H_SETTING = "hadamard_FISTA_l122_p-10_lmd-100"
+# H_SETTING = "gf"
 n = 128
 m = 256
 tau = 1e0
@@ -72,5 +72,5 @@ f = np.clip(f, 0, 1) * 255
 F = f.reshape(n, n)
 F = F.astype(np.uint8)
 F_image = Image.fromarray(F)
-F_image.save(f"{DATA_PATH}/240825/reconst/{OBJ_NAME}_admm_t-{tau}.png")
-print(f"Saved {DATA_PATH}/240825/reconst/{OBJ_NAME}_admm_t-{tau}.png")
+F_image.save(f"{DATA_PATH}/240825/reconst/{OBJ_NAME}_{H_SETTING}_admm_t-{tau}.png")
+print(f"Saved {DATA_PATH}/240825/reconst/{OBJ_NAME}_{H_SETTING}_admm_t-{tau}.png")

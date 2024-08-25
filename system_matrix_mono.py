@@ -3,6 +3,7 @@
 import os
 import re
 import numpy as np
+import cupy as cp
 import scipy.sparse as sps
 import scipy.io as sio
 import matplotlib.pyplot as plt
@@ -38,7 +39,11 @@ class SystemMatrixMono:
     def generate(self):
         F = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_input/")
         G = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_cap_240814/", is_f=False)
-        res = (G @ F.T) / (self.n**2)
+        F_gpu = cp.asarray(F)
+        G_gpu = cp.asarray(G)
+
+        res_gpu = (G_gpu @ F_gpu.T) / (self.n**2)
+        res = cp.asnumpy(res_gpu)
 
         return res
 
@@ -58,7 +63,9 @@ if __name__ == "__main__":
     sample_image = Image.open(f"{DATA_PATH}/sample_image{sm.n}/{SAMPLE_NAME}.png").convert("L")
     sample_image = np.asarray(sample_image).flatten() / 255
 
-    Hf = H @ sample_image
+    sample_image_gpu = cp.asarray(sample_image)
+    Hf = cp.asnumpy(H @ sample_image_gpu)
+
     Hf_img = Hf.reshape(sm.m, sm.m)
     Hf_img = np.clip(Hf_img, 0, 1)
     Hf_pil = Image.fromarray((Hf_img * 255).astype(np.uint8), mode="L")

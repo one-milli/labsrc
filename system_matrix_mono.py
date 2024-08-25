@@ -38,7 +38,9 @@ class SystemMatrixMono:
 
     def generate(self):
         F = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_input/").astype(np.int8)
+        print("F shape:", F.shape)
         G = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_cap_240814/", is_f=False).astype(np.float32)
+        print("G shape:", G.shape)
         F_gpu = cp.asarray(F)
         G_gpu = cp.asarray(G)
 

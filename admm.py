@@ -87,6 +87,6 @@ class Admm:
                 err_diff = error
             self.err.append(error)
             print("iter =", i, "err =", error, "diff =", err_diff)
-            if err_diff < 1e-5:
+            if err_diff < 1e-4:
                 break
         return cp.asnumpy(self.f), self.err

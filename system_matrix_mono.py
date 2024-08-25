@@ -17,7 +17,7 @@ class SystemMatrixMono:
         self.n = 128
         self.m = 256
 
-    def load_images(self, folder_path, is_f=True):
+    def load_images(self, folder_path, is_f=False):
         files = os.listdir(folder_path)
         files.sort(key=lambda f: int(re.search(rf"{self.pattern_name}_(\d+).png", f).group(1)))
         images = []
@@ -37,9 +37,9 @@ class SystemMatrixMono:
         return np.column_stack(images)
 
     def generate(self):
-        F = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_input/").astype(np.int8)
+        F = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_input/", is_f=True).astype(np.int8)
         print("F shape:", F.shape)
-        G = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_cap_240814/", is_f=False).astype(np.float32)
+        G = self.load_images(f"{self.data_path}/{self.pattern_name}{self.n}_cap_240814/").astype(np.float32)
         print("G shape:", G.shape)
         F_gpu = cp.asarray(F)
         G_gpu = cp.asarray(G)

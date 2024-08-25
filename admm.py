@@ -37,7 +37,7 @@ class Admm:
         return cp.linalg.norm(self.g - self.H @ self.f) ** 2 + self.tau * cp.linalg.norm(self.D @ self.f, 1)
 
     def compute_err(self, f):
-        return cp.linalg.norm(f - self.f)
+        return cp.asnumpy(cp.linalg.norm(f - self.f))
 
     def update_r(self):
         self.r = (
@@ -89,4 +89,4 @@ class Admm:
             print("iter =", i, "err =", error, "diff =", err_diff)
             if err_diff < 1e-5:
                 break
-        return cp.asnumpy(self.f), cp.asnumpy(self.err)
+        return cp.asnumpy(self.f), self.err

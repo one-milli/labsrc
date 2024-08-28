@@ -93,13 +93,14 @@ def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
     return matrix2vectorCp(res_gpu)
 
 
-def mult_Dijkl(h: cp.ndarray) -> cp.ndarray:
+def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
     H = vector2matrixCp(h, M, N)
-    res_gpu = cp.hstack([Di_gpu @ H, Dj_gpu @ H, H @ Dk_gpu.T, H @ Dl_gpu.T])
+    res_gpu = cp.ndarray((4 * M, N), dtype=cp.float16, memptr=memptr)
+    res_gpu[:] = cp.hstack([Di_gpu @ H, Dj_gpu @ H, H @ Dk_gpu.T, H @ Dl_gpu.T])
     return matrix2vectorCp(res_gpu)
 
 
-def mult_DijklT(y: cp.ndarray) -> cp.ndarray:
+def mult_DijklT(y: cp.ndarray, memptr) -> cp.ndarray:
     y1 = y[: M * N]
     y2 = y[M * N : 2 * M * N]
     y3 = y[2 * M * N : 3 * M * N]
@@ -109,7 +110,8 @@ def mult_DijklT(y: cp.ndarray) -> cp.ndarray:
     Y3 = vector2matrixCp(y3, M, N)
     Y4 = vector2matrixCp(y4, M, N)
 
-    res_gpu = Di_gpu.T @ Y1 + Dj_gpu.T @ Y2 + Y3 @ Dk_gpu.T + Y4 @ Dl_gpu.T
+    res_gpu = cp.ndarray((M, N), dtype=cp.float16, memptr=memptr)
+    res_gpu[:] = Di_gpu.T @ Y1 + Dj_gpu.T @ Y2 + Y3 @ Dk_gpu.T + Y4 @ Dl_gpu.T
     return matrix2vectorCp(res_gpu)
 
 
@@ -221,6 +223,8 @@ def primal_dual_splitting(
     h_old = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
     y = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
     y_old = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+    memptr_D = cp.cuda.malloc_managed(4 * M * N * 2)
+    memptr_DT = cp.cuda.malloc_managed(M * N * 2)
 
     h[:] = 0
     h_old[:] = 0
@@ -238,10 +242,11 @@ def primal_dual_splitting(
         y_old = y.copy()
 
         h = prox_l122(
-            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old, M) - g), M) - mult_DijklT(y_old)), tau * lambda1
+            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old, M) - g), M) - mult_DijklT(y_old, memptr_DT)),
+            tau * lambda1,
         )
 
-        y = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old), sigma / lambda2)
+        y = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old, memptr_D), sigma / lambda2)
 
         # calculate 2nd term & 3rd term
         if k % 100 == 0:

@@ -96,7 +96,17 @@ def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
 def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
     H = vector2matrixCp(h, M, N)
     res_gpu = cp.ndarray((4 * M, N), dtype=cp.float16, memptr=memptr)
-    res_gpu[:] = cp.hstack([Di_gpu @ H, Dj_gpu @ H, H @ Dk_gpu.T, H @ Dl_gpu.T])
+
+    chunk_size = 1024
+    for i in range(0, N, chunk_size):
+        chunk_end = min(i + chunk_size, N)
+        H_chunk = H[:, i:chunk_end]
+        Dk_chunk_T = Dk_gpu[:, i:chunk_end].T
+        Dl_chunk_T = Dl_gpu[:, i:chunk_end].T
+
+        res_gpu_chunk = cp.hstack([Di_gpu @ H_chunk, Dj_gpu @ H_chunk, H_chunk @ Dk_chunk_T, H_chunk @ Dl_chunk_T])
+        res_gpu[:, i:chunk_end] = res_gpu_chunk
+
     return matrix2vectorCp(res_gpu)
 
 

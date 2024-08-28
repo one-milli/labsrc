@@ -200,7 +200,7 @@ def prox_conj(prox: Callable[[cp.ndarray, float], cp.ndarray], x: cp.ndarray, ga
 
 
 def primal_dual_splitting(
-    X: cp.ndarray, g: cp.ndarray, lambda1: float, lambda2: float, max_iter: int = ITER, tol: float = 1e-2
+    X: cp.ndarray, g: cp.ndarray, lambda1: float, lambda2: float, max_iter: int = ITER
 ) -> tuple[np.ndarray, dict]:
     """
     Solve the optimization problem:
@@ -216,7 +216,11 @@ def primal_dual_splitting(
     Returns:
         tuple[np.ndarray, dict]: Solution h and a dictionary containing additional information.
     """
-    cp.cuda.set_allocator(cp.cuda.MemoryPool().malloc)
+    h = cp.cuda.set_allocator(cp.cuda.malloc_managed(M * N * 2))
+    h_old = cp.cuda.set_allocator(cp.cuda.malloc_managed(M * N * 2))
+    y = cp.cuda.set_allocator(cp.cuda.malloc_managed(4 * M * N * 2))
+    y_old = cp.cuda.set_allocator(cp.cuda.malloc_managed(4 * M * N * 2))
+
     h = cp.zeros(M * N).astype(cp.float16)
     h_old = cp.zeros(M * N).astype(cp.float16)
     y = cp.zeros(4 * M * N).astype(cp.float16)

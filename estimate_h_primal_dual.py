@@ -216,15 +216,16 @@ def primal_dual_splitting(
     Returns:
         tuple[np.ndarray, dict]: Solution h and a dictionary containing additional information.
     """
-    h = cp.cuda.set_allocator(cp.cuda.malloc_managed(M * N * 2))
-    h_old = cp.cuda.set_allocator(cp.cuda.malloc_managed(M * N * 2))
-    y = cp.cuda.set_allocator(cp.cuda.malloc_managed(4 * M * N * 2))
-    y_old = cp.cuda.set_allocator(cp.cuda.malloc_managed(4 * M * N * 2))
 
-    h = cp.zeros(M * N).astype(cp.float16)
-    h_old = cp.zeros(M * N).astype(cp.float16)
-    y = cp.zeros(4 * M * N).astype(cp.float16)
-    y_old = cp.zeros(4 * M * N).astype(cp.float16)
+    h = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
+    h_old = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
+    y = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+    y_old = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+
+    h[:] = 0
+    h_old[:] = 0
+    y[:] = 0
+    y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f
     tau = 1 / (4096 * 3)

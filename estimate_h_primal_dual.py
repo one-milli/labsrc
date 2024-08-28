@@ -71,23 +71,23 @@ Dl_gpu = cp.sparse.csr_matrix(Dl).astype(cp.float32)
 
 # %%
 def matrix2vectorNp(matrix: np.ndarray) -> np.ndarray:
-    return matrix.reshape(-1, 1, order="F").flatten().astype(np.float32)
+    return matrix.reshape(-1, 1, order="F").flatten().astype(np.float16)
 
 
 def matrix2vectorCp(matrix: cp.ndarray) -> cp.ndarray:
-    return matrix.reshape(-1, 1, order="F").flatten().astype(cp.float32)
+    return matrix.reshape(-1, 1, order="F").flatten().astype(cp.float16)
 
 
 def vector2matrixNp(vector: np.ndarray, s: int, t: int) -> np.ndarray:
-    return vector.reshape(s, t, order="F").astype(np.float32)
+    return vector.reshape(s, t, order="F").astype(np.float16)
 
 
 def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
-    return vector.reshape(s, t, order="F").astype(cp.float32)
+    return vector.reshape(s, t, order="F").astype(cp.float16)
 
 
 def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
-    F_gpu = X.T.astype(cp.float32)
+    F_gpu = X.T.astype(cp.float16)
     H_gpu = cp.asarray(h.reshape(M, -1, order="F"))
     res_gpu = H_gpu @ F_gpu
     return matrix2vectorCp(res_gpu)
@@ -185,7 +185,7 @@ def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
 
 
 def prox_tv(y: cp.ndarray, gamma: float) -> cp.ndarray:
-    Dx_norm = cp.linalg.norm(y.reshape(-1, 4, order="F"), axis=1).astype(cp.float32)
+    Dx_norm = cp.linalg.norm(y.reshape(-1, 4, order="F"), axis=1).astype(cp.float16)
     Dx_norm = cp.tile(Dx_norm[:, None], (1, 4))
 
     prox = cp.maximum(1 - gamma / Dx_norm, 0) * y.reshape(-1, 4, order="F")
@@ -216,10 +216,11 @@ def primal_dual_splitting(
     Returns:
         tuple[np.ndarray, dict]: Solution h and a dictionary containing additional information.
     """
-    h = cp.zeros(M * N).astype(cp.float32)
-    h_old = cp.zeros(M * N).astype(cp.float32)
-    y = cp.zeros(4 * M * N).astype(cp.float32)
-    y_old = cp.zeros(4 * M * N).astype(cp.float32)
+    cp.cuda.set_allocator(cp.cuda.MemoryPool().malloc)
+    h = cp.zeros(M * N).astype(cp.float16)
+    h_old = cp.zeros(M * N).astype(cp.float16)
+    y = cp.zeros(4 * M * N).astype(cp.float16)
+    y_old = cp.zeros(4 * M * N).astype(cp.float16)
 
     # Compute Lipschitz constant of grad_f
     tau = 1 / (4096 * 3)
@@ -258,6 +259,8 @@ def primal_dual_splitting(
         "time": end - start,
     }
 
+    del h, h_old, y, y_old
+
     return cp.asnumpy(h), info
 
 
@@ -277,8 +280,8 @@ G_hat = 2 * G - H1
 g = matrix2vectorNp(G_hat)
 
 # %%
-F_hat_T_gpu = cp.asarray(F_hat.T).astype(cp.float32)
-g_gpu = cp.asarray(g).astype(cp.float32)
+F_hat_T_gpu = cp.asarray(F_hat.T).astype(cp.int8)
+g_gpu = cp.asarray(g).astype(cp.float16)
 del F, G, H1, F_hat, G_hat
 
 # %%

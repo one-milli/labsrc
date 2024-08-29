@@ -32,9 +32,10 @@ rem.append(rem1)
 del H1
 
 # plot
-x = [8192, 4096, 1638, 819, 163]
-plt.plot(x, rem)
+fig, ax = plt.subplots()
+ax.set_xticks([10000 - 8192, 10000 - 4096, 10000 - 1638, 10000 - 819, 10000 - 163])
+ax.set_xticklabels(["8192", "4096", "1638", "819", "163"])
+ax.plot([10000 - 8192, 10000 - 4096, 10000 - 1638, 10000 - 819, 10000 - 163], rem)
 plt.xlabel("K value")
 plt.ylabel("Frobenius norm")
-plt.xticks(x, x)
 plt.savefig(f"{DATA_PATH}/h_diff.png")

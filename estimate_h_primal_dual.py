@@ -90,6 +90,8 @@ def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
 
 
 def mult_mass(X: cp.ndarray, h: cp.ndarray) -> cp.ndarray:
+    print("shape X: ", X.shape)
+    print("shape h: ", h.shape)
     return matrix2vectorCp((h.reshape(M, -1, order="F") @ X.T).astype(cp.float16))
 
 

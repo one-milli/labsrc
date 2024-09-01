@@ -44,26 +44,22 @@ cp.cuda.Device(3).use()
 # %%
 Di_gpu = csp.eye(M, dtype=cp.float32, format="csr") - csp.eye(M, k=m, dtype=cp.float32, format="csr")
 Di_gpu[-m:, :] = 0
-print(f"Di_gpu GPU memory usage: {Di_gpu.nbytes / 1024**2} MB")
 
 Dj_gpu = csp.eye(M, dtype=cp.float32, format="csr") - csp.eye(M, k=1, dtype=cp.float32, format="csr")
 for p in range(1, m + 1):
     Dj_gpu[m * p - 1, m * p - 1] = 0
     if p < m:
         Dj_gpu[m * p - 1, m * p] = 0
-print(f"Dj_gpu GPU memory usage: {Dj_gpu.nbytes / 1024**2} MB")
 
 Dk_gpu = csp.eye(N, dtype=cp.float32, format="csr") - csp.eye(N, k=n, dtype=cp.float32, format="csr")
 Dk_gpu = csp.csr_matrix(Dk_gpu[: n * (n - 1), :N])
 Dk_gpu = csp.vstack([Dk_gpu, csp.csr_matrix((n, N))])
-print(f"Dk_gpu GPU memory usage: {Dk_gpu.nbytes / 1024**2} MB")
 
 Dl_gpu = csp.eye(N, dtype=cp.float32, format="csr") - csp.eye(N, k=1, dtype=cp.float32, format="csr")
 for p in range(1, n + 1):
     Dl_gpu[n * p - 1, n * p - 1] = 0
     if p < n:
         Dl_gpu[n * p - 1, n * p] = 0
-print(f"Dl_gpu GPU memory usage: {Dl_gpu.nbytes / 1024**2} MB")
 
 
 # %%

@@ -23,7 +23,7 @@ m = 192
 N = n**2
 M = m**2
 LAMBDA1 = 10
-LAMBDA2 = 1
+LAMBDA2 = 1e-8
 SEED = 5
 RATIO = 0.05
 ITER = 500
@@ -244,9 +244,9 @@ def primal_dual_splitting(
         y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old, memptr_D), sigma / lambda2)
 
         # calculate 2nd term & 3rd term
-        # if k % 100 == 1:
-        # print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
-        # print("3rd", calculate_3rd_term(h, memptr_D))
+        if k % 100 == 2:
+            print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
+            print("3rd", calculate_3rd_term(h, memptr_D))
 
         if k == max_iter - 1:
             primal_residual = cp.linalg.norm(h - h_old)

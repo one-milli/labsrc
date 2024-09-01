@@ -43,7 +43,7 @@ cp.cuda.Device(3).use()
 Di = sparse.eye(M, dtype=np.int8, format="csr") - sparse.eye(M, k=m, dtype=np.int8, format="csr")
 Di[-m:, :] = 0
 with cp.cuda.Device(2):
-    Di_gpu = cp.sparse.csr_matrix(Di.toarray())
+    Di_gpu = cp.asarray(Di.toarray())
     print(f"Di_gpu GPU memory usage: {Di_gpu.nbytes / 1024**2} MB")
 
 Dj = sparse.eye(M, dtype=np.int8, format="csr") - sparse.eye(M, k=1, dtype=np.int8, format="csr")
@@ -52,14 +52,14 @@ for p in range(1, m + 1):
     if p < m:
         Dj[m * p - 1, m * p] = 0
 with cp.cuda.Device(2):
-    Dj_gpu = cp.sparse.csr_matrix(Dj.toarray())
+    Dj_gpu = cp.asarray(Dj.toarray())
     print(f"Dj_gpu GPU memory usage: {Dj_gpu.nbytes / 1024**2} MB")
 
 Dk = sparse.eye(N, dtype=np.int8, format="csr") - sparse.eye(N, k=n, dtype=np.int8, format="csr")
 Dk = sparse.csr_matrix(Dk[: n * (n - 1), :N])
 Dk = sparse.vstack([Dk, sparse.csr_matrix((n, N))])
 with cp.cuda.Device(2):
-    Dk_gpu = cp.sparse.csr_matrix(Dk.toarray())
+    Dk_gpu = cp.asarray(Dk.toarray())
     print(f"Dk_gpu GPU memory usage: {Dk_gpu.nbytes / 1024**2} MB")
 
 Dl = sparse.eye(N, dtype=np.int8, format="csr") - sparse.eye(N, k=1, dtype=np.int8, format="csr")
@@ -68,7 +68,7 @@ for p in range(1, n + 1):
     if p < n:
         Dl[n * p - 1, n * p] = 0
 with cp.cuda.Device(2):
-    Dl_gpu = cp.sparse.csr_matrix(Dl.toarray())
+    Dl_gpu = cp.asarray(Dl.toarray())
     print(f"Dl_gpu GPU memory usage: {Dl_gpu.nbytes / 1024**2} MB")
 
 

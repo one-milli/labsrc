@@ -78,7 +78,6 @@ def matrix2vectorNp(matrix: np.ndarray) -> np.ndarray:
 
 
 def matrix2vectorCp(matrix: cp.ndarray) -> cp.ndarray:
-    print("matrix2vectorCp")
     return matrix.reshape(-1, 1, order="F").flatten().astype(cp.float16)
 
 
@@ -87,7 +86,6 @@ def vector2matrixNp(vector: np.ndarray, s: int, t: int) -> np.ndarray:
 
 
 def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
-    print("vector2matrixCp")
     return vector.reshape(s, t, order="F").astype(cp.float16)
 
 
@@ -173,12 +171,14 @@ def calculate_2nd_term(H):
 def calculate_3rd_term(h, memptr):
     Du = mult_Dijkl(h, memptr)
 
-    d_i = Du[0 : M * N - 1, :]
-    d_j = Du[M * N : 2 * M * N - 1, :]
-    d_k = Du[2 * M * N : 3 * M * N - 1, :]
-    d_l = Du[3 * M * N :, :]
-
-    tv = cp.sum(cp.sqrt(d_i**2 + d_j**2 + d_k**2 + d_l**2))
+    tv = cp.sum(
+        cp.sqrt(
+            (Du[0 : M * N - 1]) ** 2
+            + (Du[M * N : 2 * M * N - 1]) ** 2
+            + (Du[2 * M * N : 3 * M * N - 1]) ** 2
+            + (Du[3 * M * N :]) ** 2
+        )
+    )
 
     return tv
 
@@ -262,19 +262,20 @@ def primal_dual_splitting(
         used_bytes = mempool.used_bytes()
         total_bytes = mempool.total_bytes()
         print(f"used_bytes={used_bytes / 1024**2:.2f} MB, total_bytes={total_bytes / 1024**2:.2f} MB")
-        h_old = h.copy()
-        y_old = y.copy()
+        h_old[:] = h[:]
+        y_old[:] = y[:]
+
+        h[:] = prox_l122(
+            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old, M) - g), M) - mult_DijklT(y_old, memptr_DT)),
+            tau * lambda1,
+        )
+
         mempool = cp.get_default_memory_pool()
         used_bytes = mempool.used_bytes()
         total_bytes = mempool.total_bytes()
         print(f"used_bytes={used_bytes / 1024**2:.2f} MB, total_bytes={total_bytes / 1024**2:.2f} MB")
 
-        h = prox_l122(
-            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old, M) - g), M) - mult_DijklT(y_old, memptr_DT)),
-            tau * lambda1,
-        )
-
-        y = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old, memptr_D), sigma / lambda2)
+        y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old, memptr_D), sigma / lambda2)
 
         # calculate 2nd term & 3rd term
         if k % 100 == 0:

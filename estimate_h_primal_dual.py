@@ -78,6 +78,7 @@ def matrix2vectorNp(matrix: np.ndarray) -> np.ndarray:
 
 
 def matrix2vectorCp(matrix: cp.ndarray) -> cp.ndarray:
+    print("matrix2vectorCp")
     return matrix.reshape(-1, 1, order="F").flatten().astype(cp.float16)
 
 
@@ -86,6 +87,7 @@ def vector2matrixNp(vector: np.ndarray, s: int, t: int) -> np.ndarray:
 
 
 def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
+    print("vector2matrixCp")
     return vector.reshape(s, t, order="F").astype(cp.float16)
 
 
@@ -98,17 +100,19 @@ def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
 
 
 def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
+    print("mult_Dijkl")
     with cp.cuda.Device(h.device.id):
         H = vector2matrixCp(h, M, N)
-        res_gpu = cp.ndarray((4 * M, N), dtype=cp.float16, memptr=memptr)
-        res_gpu[:M] = Di_gpu @ H
-        res_gpu[M : 2 * M] = Dj_gpu @ H
-        res_gpu[2 * M : 3 * M] = H @ Dk_gpu.T
-        res_gpu[3 * M :] = H @ Dl_gpu.T
-        return matrix2vectorCp(res_gpu)
+        res_gpu = cp.ndarray((4 * M * N), dtype=cp.float16, memptr=memptr)
+        res_gpu[: M * N] = matrix2vectorCp(Di_gpu @ H)
+        res_gpu[M * N : 2 * M * N] = matrix2vectorCp(Dj_gpu @ H)
+        res_gpu[2 * M * N : 3 * M * N] = matrix2vectorCp(H @ Dk_gpu.T)
+        res_gpu[3 * M * N :] = matrix2vectorCp(H @ Dl_gpu.T)
+        return res_gpu
 
 
 def mult_DijklT(y: cp.ndarray, memptr) -> cp.ndarray:
+    print("mult_DijklT")
     with cp.cuda.Device(y.device.id):
         y1 = y[: M * N]
         y2 = y[M * N : 2 * M * N]

@@ -285,6 +285,7 @@ G, use = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/")
 F, _ = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/")
 print("K=", F.shape[1])
 white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")
+white_img = white_img.resize((m, m))
 white = np.asarray(white_img).flatten() / 255
 white = white[:, np.newaxis]
 H1 = np.tile(white, F.shape[1])

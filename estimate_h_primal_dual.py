@@ -24,7 +24,7 @@ M = m**2
 LAMBDA1 = 10
 LAMBDA2 = 1
 SEED = 5
-RATIO = 0.1
+RATIO = 0.05
 ITER = 500
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
@@ -90,8 +90,6 @@ def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
 
 
 def mult_mass(X: cp.ndarray, h: cp.ndarray) -> cp.ndarray:
-    print("shape X: ", X.shape)
-    print("shape h: ", h.shape)
     return matrix2vectorCp((h.reshape(M, -1, order="F") @ X.T).astype(cp.float16))
 
 
@@ -118,7 +116,7 @@ def mult_DijklT(y: cp.ndarray, memptr) -> cp.ndarray:
         return matrix2vectorCp(res_gpu)
 
 
-def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO):
+def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, resize=False):
     files = os.listdir(folder_path)
     files.sort(key=lambda f: int(re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
     if rand:
@@ -139,7 +137,8 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO):
         img = Image.open(os.path.join(folder_path, file))
         if convert_gray:
             img = img.convert("L")
-        img = img.resize((m, m))
+        if resize:
+            img = img.resize((m, m))
         img_array = np.asarray(img).flatten()
         img_array = img_array / 255
         images.append(img_array)
@@ -283,7 +282,7 @@ def primal_dual_splitting(
 # %%
 # load images
 INFO = "cap_240814"
-G, use = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/")
+G, use = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", resize=True)
 F, _ = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/")
 print("K=", F.shape[1])
 white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")

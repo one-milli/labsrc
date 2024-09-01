@@ -173,9 +173,9 @@ def calculate_3rd_term(h, memptr):
 
     tv = cp.sum(
         cp.sqrt(
-            (Du[0 : M * N - 1]) ** 2
-            + (Du[M * N : 2 * M * N - 1]) ** 2
-            + (Du[2 * M * N : 3 * M * N - 1]) ** 2
+            (Du[0 : M * N]) ** 2
+            + (Du[M * N : 2 * M * N]) ** 2
+            + (Du[2 * M * N : 3 * M * N]) ** 2
             + (Du[3 * M * N :]) ** 2
         )
     )
@@ -278,7 +278,7 @@ def primal_dual_splitting(
         y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old, memptr_D), sigma / lambda2)
 
         # calculate 2nd term & 3rd term
-        if k % 100 == 0:
+        if k % 100 == 1:
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
             print("3rd", calculate_3rd_term(h, memptr_D))
 

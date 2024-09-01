@@ -18,7 +18,7 @@ from scipy import sparse
 
 # %%
 n = 128
-m = 256
+m = 192
 N = n**2
 M = m**2
 LAMBDA1 = 10
@@ -89,14 +89,12 @@ def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
     return vector.reshape(s, t, order="F")
 
 
-def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
-    print("mult_mass")
+def mult_mass(X: cp.ndarray, h: cp.ndarray) -> cp.ndarray:
     return matrix2vectorCp((h.reshape(M, -1, order="F") @ X.T).astype(cp.float16))
 
 
 def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
     print("mult_Dijkl")
-    print("mem_ptr", memptr)
     with cp.cuda.Device(h.device.id):
         H = vector2matrixCp(h, M, N)
         res_gpu = cp.ndarray((4 * M * N), dtype=cp.float16, memptr=memptr)
@@ -109,7 +107,6 @@ def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
 
 def mult_DijklT(y: cp.ndarray, memptr) -> cp.ndarray:
     print("mult_DijklT")
-    print("mem_ptr", memptr)
     with cp.cuda.Device(y.device.id):
         res_gpu = cp.ndarray((M, N), dtype=cp.float16, memptr=memptr)
         res_gpu[:] = Di_gpu.T @ vector2matrixCp(y[: M * N], M, N)
@@ -140,6 +137,7 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO):
         img = Image.open(os.path.join(folder_path, file))
         if convert_gray:
             img = img.convert("L")
+        img = img.resize((m, m))
         img_array = np.asarray(img).flatten()
         img_array = img_array / 255
         images.append(img_array)
@@ -248,16 +246,16 @@ def primal_dual_splitting(
         y_old[:] = y[:]
 
         h[:] = prox_l122(
-            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old, M) - g), M) - mult_DijklT(y_old, memptr_DT)),
+            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old) - g)) - mult_DijklT(y_old, memptr_DT)),
             tau * lambda1,
         )
 
         y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old, memptr_D), sigma / lambda2)
 
         # calculate 2nd term & 3rd term
-        if k % 100 == 1:
-            print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
-            print("3rd", calculate_3rd_term(h, memptr_D))
+        # if k % 100 == 1:
+        # print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
+        # print("3rd", calculate_3rd_term(h, memptr_D))
 
         if k == max_iter - 1:
             primal_residual = cp.linalg.norm(h - h_old)

@@ -96,6 +96,7 @@ def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
 
 def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
     print("mult_Dijkl")
+    print("mem_ptr", memptr)
     with cp.cuda.Device(h.device.id):
         H = vector2matrixCp(h, M, N)
         res_gpu = cp.ndarray((4 * M * N), dtype=cp.float16, memptr=memptr)
@@ -108,6 +109,7 @@ def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
 
 def mult_DijklT(y: cp.ndarray, memptr) -> cp.ndarray:
     print("mult_DijklT")
+    print("mem_ptr", memptr)
     with cp.cuda.Device(y.device.id):
         res_gpu = cp.ndarray((M, N), dtype=cp.float16, memptr=memptr)
         res_gpu[:] = Di_gpu.T @ vector2matrixCp(y[: M * N], M, N)
@@ -239,7 +241,7 @@ def primal_dual_splitting(
     sigma = 1 / (16384 * 3)
     print(f"tau={tau}, sigma={sigma}")
 
-    start = time.perf_counter()
+    # start = time.perf_counter()
     for k in range(max_iter):
         # GPU memory usage check
         h_old[:] = h[:]
@@ -265,12 +267,12 @@ def primal_dual_splitting(
         else:
             print(f"iter={k}")
 
-    end = time.perf_counter()
+    # end = time.perf_counter()
     info = {
         "iterations": k + 1,
         "primal_residual": primal_residual,
         "dual_residual": dual_residual,
-        "time": end - start,
+        # "time": end - start,
     }
 
     del h, h_old, y, y_old

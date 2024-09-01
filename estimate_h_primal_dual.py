@@ -17,7 +17,6 @@ from PIL import Image
 from scipy import sparse
 
 # %%
-# パラメータ設定
 n = 128
 m = 256
 N = n**2
@@ -96,17 +95,10 @@ def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
 def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
     H = vector2matrixCp(h, M, N)
     res_gpu = cp.ndarray((4 * M, N), dtype=cp.float16, memptr=memptr)
-
-    chunk_size = 1024
-    for i in range(0, N, chunk_size):
-        chunk_end = min(i + chunk_size, N)
-        H_chunk = H[:, i:chunk_end]
-        Dk_chunk_T = Dk_gpu[:, i:chunk_end].T
-        Dl_chunk_T = Dl_gpu[:, i:chunk_end].T
-
-        res_gpu_chunk = cp.hstack([Di_gpu @ H_chunk, Dj_gpu @ H_chunk, H_chunk @ Dk_chunk_T, H_chunk @ Dl_chunk_T])
-        res_gpu[:, i:chunk_end] = res_gpu_chunk
-
+    res_gpu[:M] = Di_gpu @ H
+    res_gpu[M : 2 * M] = Dj_gpu @ H
+    res_gpu[2 * M : 3 * M] = H @ Dk_gpu.T
+    res_gpu[3 * M :] = H @ Dl_gpu.T
     return matrix2vectorCp(res_gpu)
 
 
@@ -169,8 +161,8 @@ def calculate_2nd_term(H):
     return result
 
 
-def calculate_3rd_term(h):
-    Du = mult_Dijkl(h)
+def calculate_3rd_term(h, memptr):
+    Du = mult_Dijkl(h, memptr)
 
     d_i = Du[0 : M * N - 1, :]
     d_j = Du[M * N : 2 * M * N - 1, :]
@@ -261,7 +253,7 @@ def primal_dual_splitting(
         # calculate 2nd term & 3rd term
         if k % 100 == 0:
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
-            print("3rd", calculate_3rd_term(h))
+            print("3rd", calculate_3rd_term(h, memptr_D))
 
         if k == max_iter - 1:
             primal_residual = cp.linalg.norm(h - h_old)
@@ -327,8 +319,3 @@ ax.imshow(Hf_pil, cmap="gray")
 ax.axis("off")
 fig.savefig(f"{DIRECTORY}/{FILENAME}", dpi=1)
 plt.show()
-
-# %%
-# H_true = np.load(f"{DATA_PATH}/systemMatrix/H_matrix_true.npy")
-# rem = np.linalg.norm(H_true - H, "fro")
-# print(rem)

@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 # %%
-# パラメータ設定
 n = 128
 m = 256
 N = n**2
@@ -197,8 +196,3 @@ ax.imshow(Hf_pil, cmap="gray")
 ax.axis("off")
 fig.savefig(f"{DIRECTORY}/{FILENAME}", dpi=1)
 plt.show()
-
-# %%
-# H_true = np.load(f"{DATA_PATH}/systemMatrix/H_matrix_true.npy")
-# rem = np.linalg.norm(H_true - H, "fro")
-# print(rem)

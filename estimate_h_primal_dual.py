@@ -15,6 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy import sparse
+import cupyx.scipy.sparse as csp
 
 # %%
 n = 128
@@ -40,36 +41,28 @@ cp.cuda.Device(2).use()
 cp.cuda.Device(3).use()
 
 # %%
-Di = sparse.eye(M, dtype=np.int8, format="csr") - sparse.eye(M, k=m, dtype=np.int8, format="csr")
-Di[-m:, :] = 0
-with cp.cuda.Device(2):
-    Di_gpu = cp.asarray(Di.toarray())
-    print(f"Di_gpu GPU memory usage: {Di_gpu.nbytes / 1024**2} MB")
+Di_gpu = csp.eye(M, dtype=np.int8, format="csr") - csp.eye(M, k=m, dtype=np.int8, format="csr")
+Di_gpu[-m:, :] = 0
+print(f"Di_gpu GPU memory usage: {Di_gpu.nbytes / 1024**2} MB")
 
-Dj = sparse.eye(M, dtype=np.int8, format="csr") - sparse.eye(M, k=1, dtype=np.int8, format="csr")
+Dj_gpu = csp.eye(M, dtype=np.int8, format="csr") - csp.eye(M, k=1, dtype=np.int8, format="csr")
 for p in range(1, m + 1):
-    Dj[m * p - 1, m * p - 1] = 0
+    Dj_gpu[m * p - 1, m * p - 1] = 0
     if p < m:
-        Dj[m * p - 1, m * p] = 0
-with cp.cuda.Device(2):
-    Dj_gpu = cp.asarray(Dj.toarray())
-    print(f"Dj_gpu GPU memory usage: {Dj_gpu.nbytes / 1024**2} MB")
+        Dj_gpu[m * p - 1, m * p] = 0
+print(f"Dj_gpu GPU memory usage: {Dj_gpu.nbytes / 1024**2} MB")
 
-Dk = sparse.eye(N, dtype=np.int8, format="csr") - sparse.eye(N, k=n, dtype=np.int8, format="csr")
-Dk = sparse.csr_matrix(Dk[: n * (n - 1), :N])
-Dk = sparse.vstack([Dk, sparse.csr_matrix((n, N))])
-with cp.cuda.Device(2):
-    Dk_gpu = cp.asarray(Dk.toarray())
-    print(f"Dk_gpu GPU memory usage: {Dk_gpu.nbytes / 1024**2} MB")
+Dk_gpu = csp.eye(N, dtype=np.int8, format="csr") - csp.eye(N, k=n, dtype=np.int8, format="csr")
+Dk_gpu = csp.csr_matrix(Dk_gpu[: n * (n - 1), :N])
+Dk_gpu = csp.vstack([Dk_gpu, csp.csr_matrix((n, N))])
+print(f"Dk_gpu GPU memory usage: {Dk_gpu.nbytes / 1024**2} MB")
 
-Dl = sparse.eye(N, dtype=np.int8, format="csr") - sparse.eye(N, k=1, dtype=np.int8, format="csr")
+Dl_gpu = csp.eye(N, dtype=np.int8, format="csr") - csp.eye(N, k=1, dtype=np.int8, format="csr")
 for p in range(1, n + 1):
-    Dl[n * p - 1, n * p - 1] = 0
+    Dl_gpu[n * p - 1, n * p - 1] = 0
     if p < n:
-        Dl[n * p - 1, n * p] = 0
-with cp.cuda.Device(2):
-    Dl_gpu = cp.asarray(Dl.toarray())
-    print(f"Dl_gpu GPU memory usage: {Dl_gpu.nbytes / 1024**2} MB")
+        Dl_gpu[n * p - 1, n * p] = 0
+print(f"Dl_gpu GPU memory usage: {Dl_gpu.nbytes / 1024**2} MB")
 
 
 # %%
@@ -299,6 +292,8 @@ g = matrix2vectorNp(G_hat)
 F_hat_T_gpu = cp.asarray(F_hat.T).astype(cp.int8)
 g_gpu = cp.asarray(g).astype(cp.float16)
 
+print(f"F device: {F_hat_T_gpu.device}")
+print(f"g device: {g_gpu.device}")
 del F, G, H1, F_hat, G_hat
 
 # %%

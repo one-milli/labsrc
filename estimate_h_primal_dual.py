@@ -257,8 +257,17 @@ def primal_dual_splitting(
 
     start = time.perf_counter()
     for k in range(max_iter):
+        # GPU memory usage check
+        mempool = cp.get_default_memory_pool()
+        used_bytes = mempool.used_bytes()
+        total_bytes = mempool.total_bytes()
+        print(f"used_bytes={used_bytes / 1024**2:.2f} MB, total_bytes={total_bytes / 1024**2:.2f} MB")
         h_old = h.copy()
         y_old = y.copy()
+        mempool = cp.get_default_memory_pool()
+        used_bytes = mempool.used_bytes()
+        total_bytes = mempool.total_bytes()
+        print(f"used_bytes={used_bytes / 1024**2:.2f} MB, total_bytes={total_bytes / 1024**2:.2f} MB")
 
         h = prox_l122(
             h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old, M) - g), M) - mult_DijklT(y_old, memptr_DT)),

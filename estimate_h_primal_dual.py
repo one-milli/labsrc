@@ -26,7 +26,6 @@ LAMBDA2 = 1
 SEED = 5
 RATIO = 0.1
 ITER = 500
-# DATA_PATH = "../../OneDrive - m.titech.ac.jp/Lab/data"
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
 DIRECTORY = DATA_PATH + "/240825"
@@ -37,35 +36,40 @@ if not os.path.exists(DIRECTORY):
 if not os.path.exists(DIRECTORY + "/systemMatrix"):
     os.makedirs(DIRECTORY + "/systemMatrix")
 
-# %%
-Di = sparse.eye(M, format="lil") - sparse.eye(M, k=m, format="lil")
-Di[-m:, :] = 0
-Di = Di.tocsr()
+cp.cuda.Device(2).use()
+cp.cuda.Device(3).use()
 
-Dj = sparse.eye(M, format="lil") - sparse.eye(M, k=1, format="lil")
+# %%
+Di = sparse.eye(M, dtype=np.int8, format="csr") - sparse.eye(M, k=m, dtype=np.int8, format="csr")
+Di[-m:, :] = 0
+with cp.cuda.Device(2):
+    Di_gpu = cp.sparse.csr_matrix(Di)
+    print(f"Di_gpu GPU memory usage: {Di_gpu.nbytes / 1024**2} MB")
+
+Dj = sparse.eye(M, dtype=np.int8, format="csr") - sparse.eye(M, k=1, dtype=np.int8, format="csr")
 for p in range(1, m + 1):
     Dj[m * p - 1, m * p - 1] = 0
     if p < m:
         Dj[m * p - 1, m * p] = 0
-Dj = Dj.tocsr()
+with cp.cuda.Device(2):
+    Dj_gpu = cp.sparse.csr_matrix(Dj)
+    print(f"Dj_gpu GPU memory usage: {Dj_gpu.nbytes / 1024**2} MB")
 
-Dk = sparse.eye(N, format="lil") - sparse.eye(N, k=n, format="lil")
-Dk = sparse.lil_matrix(Dk[: n * (n - 1), :N])
-Dk = sparse.vstack([Dk, sparse.lil_matrix((n, N))])
-Dk = Dk.tocsr()
+Dk = sparse.eye(N, dtype=np.int8, format="csr") - sparse.eye(N, k=n, dtype=np.int8, format="csr")
+Dk = sparse.csr_matrix(Dk[: n * (n - 1), :N])
+Dk = sparse.vstack([Dk, sparse.csr_matrix((n, N))])
+with cp.cuda.Device(2):
+    Dk_gpu = cp.sparse.csr_matrix(Dk)
+    print(f"Dk_gpu GPU memory usage: {Dk_gpu.nbytes / 1024**2} MB")
 
-Dl = sparse.eye(N, format="lil") - sparse.eye(N, k=1, format="lil")
+Dl = sparse.eye(N, dtype=np.int8, format="csr") - sparse.eye(N, k=1, dtype=np.int8, format="csr")
 for p in range(1, n + 1):
     Dl[n * p - 1, n * p - 1] = 0
     if p < n:
         Dl[n * p - 1, n * p] = 0
-Dl = Dl.tocsr()
-
-# %%
-Di_gpu = cp.sparse.csr_matrix(Di).astype(cp.float32)
-Dj_gpu = cp.sparse.csr_matrix(Dj).astype(cp.float32)
-Dk_gpu = cp.sparse.csr_matrix(Dk).astype(cp.float32)
-Dl_gpu = cp.sparse.csr_matrix(Dl).astype(cp.float32)
+with cp.cuda.Device(2):
+    Dl_gpu = cp.sparse.csr_matrix(Dl)
+    print(f"Dl_gpu GPU memory usage: {Dl_gpu.nbytes / 1024**2} MB")
 
 
 # %%
@@ -86,35 +90,38 @@ def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
 
 
 def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
-    F_gpu = X.T.astype(cp.float16)
-    H_gpu = cp.asarray(h.reshape(M, -1, order="F"))
-    res_gpu = H_gpu @ F_gpu
-    return matrix2vectorCp(res_gpu)
+    with cp.cuda.Device(h.device.id):
+        F_gpu = X.T.astype(cp.float16)
+        H_gpu = cp.asarray(h.reshape(M, -1, order="F"))
+        res_gpu = H_gpu @ F_gpu
+        return matrix2vectorCp(res_gpu)
 
 
 def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
-    H = vector2matrixCp(h, M, N)
-    res_gpu = cp.ndarray((4 * M, N), dtype=cp.float16, memptr=memptr)
-    res_gpu[:M] = Di_gpu @ H
-    res_gpu[M : 2 * M] = Dj_gpu @ H
-    res_gpu[2 * M : 3 * M] = H @ Dk_gpu.T
-    res_gpu[3 * M :] = H @ Dl_gpu.T
-    return matrix2vectorCp(res_gpu)
+    with cp.cuda.Device(h.device.id):
+        H = vector2matrixCp(h, M, N)
+        res_gpu = cp.ndarray((4 * M, N), dtype=cp.float16, memptr=memptr)
+        res_gpu[:M] = Di_gpu @ H
+        res_gpu[M : 2 * M] = Dj_gpu @ H
+        res_gpu[2 * M : 3 * M] = H @ Dk_gpu.T
+        res_gpu[3 * M :] = H @ Dl_gpu.T
+        return matrix2vectorCp(res_gpu)
 
 
 def mult_DijklT(y: cp.ndarray, memptr) -> cp.ndarray:
-    y1 = y[: M * N]
-    y2 = y[M * N : 2 * M * N]
-    y3 = y[2 * M * N : 3 * M * N]
-    y4 = y[3 * M * N :]
-    Y1 = vector2matrixCp(y1, M, N)
-    Y2 = vector2matrixCp(y2, M, N)
-    Y3 = vector2matrixCp(y3, M, N)
-    Y4 = vector2matrixCp(y4, M, N)
+    with cp.cuda.Device(y.device.id):
+        y1 = y[: M * N]
+        y2 = y[M * N : 2 * M * N]
+        y3 = y[2 * M * N : 3 * M * N]
+        y4 = y[3 * M * N :]
+        Y1 = vector2matrixCp(y1, M, N)
+        Y2 = vector2matrixCp(y2, M, N)
+        Y3 = vector2matrixCp(y3, M, N)
+        Y4 = vector2matrixCp(y4, M, N)
 
-    res_gpu = cp.ndarray((M, N), dtype=cp.float16, memptr=memptr)
-    res_gpu[:] = Di_gpu.T @ Y1 + Dj_gpu.T @ Y2 + Y3 @ Dk_gpu.T + Y4 @ Dl_gpu.T
-    return matrix2vectorCp(res_gpu)
+        res_gpu = cp.ndarray((M, N), dtype=cp.float16, memptr=memptr)
+        res_gpu[:] = Di_gpu.T @ Y1 + Dj_gpu.T @ Y2 + Y3 @ Dk_gpu.T + Y4 @ Dl_gpu.T
+        return matrix2vectorCp(res_gpu)
 
 
 def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO):
@@ -153,9 +160,7 @@ def calculate_2nd_term(H):
     Returns:
         Scalar
     """
-    # 各行ごとの絶対値の和を計算
     column_sums = cp.sum(cp.abs(H), axis=1)
-    # 列ごとの和の2乗を計算し、その総和を求める
     result = cp.sum(column_sums**2)
 
     return result
@@ -221,10 +226,18 @@ def primal_dual_splitting(
         tuple[np.ndarray, dict]: Solution h and a dictionary containing additional information.
     """
 
-    h = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
-    h_old = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
-    y = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
-    y_old = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+    with cp.cuda.Device(X.device.id):  # X が存在するGPUを使用
+        h = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
+        h_old = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
+        print(f"h GPU memory usage: {h.nbytes / 1024**2} MB")
+        print(f"h_old GPU memory usage: {h_old.nbytes / 1024**2} MB")
+
+    with cp.cuda.Device(g.device.id):  # g が存在するGPUを使用
+        y = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+        y_old = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+        print(f"y GPU memory usage: {y.nbytes / 1024**2} MB")
+        print(f"y_old GPU memory usage: {y_old.nbytes / 1024**2} MB")
+
     memptr_D = cp.cuda.malloc_managed(4 * M * N * 2)
     memptr_DT = cp.cuda.malloc_managed(M * N * 2)
 
@@ -292,8 +305,11 @@ G_hat = 2 * G - H1
 g = matrix2vectorNp(G_hat)
 
 # %%
-F_hat_T_gpu = cp.asarray(F_hat.T).astype(cp.int8)
-g_gpu = cp.asarray(g).astype(cp.float16)
+with cp.cuda.Device(2):
+    F_hat_T_gpu = cp.asarray(F_hat.T).astype(cp.int8)
+with cp.cuda.Device(3):
+    g_gpu = cp.asarray(g).astype(cp.float16)
+
 del F, G, H1, F_hat, G_hat
 
 # %%

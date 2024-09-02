@@ -9,10 +9,9 @@ import admm
 # DATA_PATH = '../../../OneDrive - m.titech.ac.jp/Lab/data'
 DATA_PATH = "../data"
 OBJ_NAME = "Cameraman"
-H_SETTING = "hadamard_FISTA_l122_p-10_lmd-100"
+H_SETTING = "hadamard_pr-du_p-5_lmd1-10.0_lmd2-1000.0"
 # H_SETTING = "gf"
 n = 128
-m = 256
 tau = 1e0
 
 
@@ -50,8 +49,8 @@ D = D.toarray()
 print("Created D")
 
 # %%
-# captured = Image.open(f"{DATA_PATH}/capture_240814/{OBJ_NAME}_edited.png")
-captured = Image.open(f"{DATA_PATH}/capture_240814/{OBJ_NAME}_edited.png").convert("L")
+# captured = Image.open(f"{DATA_PATH}/capture_240814/{OBJ_NAME}.png")
+captured = Image.open(f"{DATA_PATH}/capture_240814/{OBJ_NAME}.png").convert("L")
 # captured = captured.crop((400, 460, 860, 920)).resize((n, n))
 captured = np.array(captured)
 g = captured.reshape(-1, 1)

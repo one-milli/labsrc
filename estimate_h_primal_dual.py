@@ -23,7 +23,7 @@ m = 192
 N = n**2
 M = m**2
 LAMBDA1 = 1e1
-LAMBDA2 = 1e1
+LAMBDA2 = 1e2
 SEED = 5
 RATIO = 0.05
 ITER = 300
@@ -234,9 +234,9 @@ def primal_dual_splitting(
     memptr_D = cp.cuda.malloc_managed(4 * M * N * 2)
     memptr_DT = cp.cuda.malloc_managed(M * N * 2)
 
-    h[:] = 0
+    h[:] = 1e-5
     h_old[:] = 0
-    y[:] = 0
+    y[:] = 1e-5
     y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f

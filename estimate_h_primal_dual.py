@@ -23,7 +23,7 @@ m = 192
 N = n**2
 M = m**2
 LAMBDA1 = 1e1
-LAMBDA2 = 1e2
+LAMBDA2 = 1e3
 SEED = 5
 RATIO = 0.05
 ITER = 300
@@ -240,8 +240,8 @@ def primal_dual_splitting(
     y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f
-    tau = 1 / (N * 1)
-    sigma = 1 / (M * 1)
+    tau = 1e-5
+    sigma = 1e-2
     print(f"tau={tau}, sigma={sigma}")
 
     # start = time.perf_counter()

@@ -4,6 +4,7 @@ min_f ||g-Hf||^2 + tau*||Df||_1 + i(f)
 """
 
 import cupy as cp
+import cupyx.scipy.sparse as csp
 
 
 class Admm:
@@ -14,9 +15,9 @@ class Admm:
     tol = 1e-5
 
     def __init__(self, H, g, D, tau):
-        self.H = cp.asarray(H)
-        self.g = cp.asarray(g)
-        self.D = cp.asarray(D)
+        self.H = H
+        self.g = g
+        self.D = D
         self.tau = tau
         self.HTH = self.H.T @ self.H
         self.DTD = self.D.T @ self.D

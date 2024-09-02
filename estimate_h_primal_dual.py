@@ -240,7 +240,7 @@ def primal_dual_splitting(
     y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f
-    tau = 1e-5
+    tau = 1e-4
     sigma = 1e-2
     print(f"tau={tau}, sigma={sigma}")
 
@@ -260,7 +260,7 @@ def primal_dual_splitting(
                          mult_Dijkl(2 * h - h_old, memptr_D), sigma * lambda2)
 
         # calculate 2nd term & 3rd term
-        if k % 20 == 2:
+        if k % 50 == 2:
             print("1st", calculate_1st_term(g, X, h))
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
             print("3rd", calculate_3rd_term(h, memptr_D))

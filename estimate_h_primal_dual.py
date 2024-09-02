@@ -22,11 +22,11 @@ n = 128
 m = 192
 N = n**2
 M = m**2
-LAMBDA1 = 10
-LAMBDA2 = 1e-8
+LAMBDA1 = 1e3
+LAMBDA2 = 1e-2
 SEED = 5
 RATIO = 0.05
-ITER = 500
+ITER = 300
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
 DIRECTORY = DATA_PATH + "/240825"
@@ -42,27 +42,32 @@ cp.cuda.Device(2).use()
 cp.cuda.Device(3).use()
 
 # %%
-Di_gpu = csp.eye(M, dtype=cp.float32, format="csr") - csp.eye(M, k=m, dtype=cp.float32, format="csr")
+Di_gpu = csp.eye(M, dtype=cp.float32, format='csr') - \
+    csp.eye(M, k=m, dtype=cp.float32, format='csr')
 Di_gpu[-m:, :] = 0
 
-Dj_gpu = csp.eye(M, dtype=cp.float32, format="csr") - csp.eye(M, k=1, dtype=cp.float32, format="csr")
+Dj_gpu = csp.eye(M, dtype=cp.float32, format='csr') - \
+    csp.eye(M, k=1, dtype=cp.float32, format='csr')
 for p in range(1, m + 1):
     Dj_gpu[m * p - 1, m * p - 1] = 0
     if p < m:
         Dj_gpu[m * p - 1, m * p] = 0
 
-Dk_gpu = csp.eye(N, dtype=cp.float32, format="csr") - csp.eye(N, k=n, dtype=cp.float32, format="csr")
-Dk_gpu = csp.csr_matrix(Dk_gpu[: n * (n - 1), :N])
+Dk_gpu = csp.eye(N, dtype=cp.float32, format='csr') - \
+    csp.eye(N, k=n, dtype=cp.float32, format='csr')
+Dk_gpu = csp.csr_matrix(Dk_gpu[:n * (n - 1), :N])
 Dk_gpu = csp.vstack([Dk_gpu, csp.csr_matrix((n, N))])
 
-Dl_gpu = csp.eye(N, dtype=cp.float32, format="csr") - csp.eye(N, k=1, dtype=cp.float32, format="csr")
+Dl_gpu = csp.eye(N, dtype=cp.float32, format='csr') - \
+    csp.eye(N, k=1, dtype=cp.float32, format='csr')
 for p in range(1, n + 1):
     Dl_gpu[n * p - 1, n * p - 1] = 0
     if p < n:
         Dl_gpu[n * p - 1, n * p] = 0
 
-
 # %%
+
+
 def matrix2vectorNp(matrix: np.ndarray) -> np.ndarray:
     return matrix.reshape(-1, 1, order="F").flatten()
 
@@ -84,31 +89,30 @@ def mult_mass(X: cp.ndarray, h: cp.ndarray) -> cp.ndarray:
 
 
 def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
-    print("mult_Dijkl")
     with cp.cuda.Device(h.device.id):
         H = vector2matrixCp(h, M, N)
         res_gpu = cp.ndarray((4 * M * N), dtype=cp.float16, memptr=memptr)
         res_gpu[: M * N] = matrix2vectorCp(Di_gpu @ H)
-        res_gpu[M * N : 2 * M * N] = matrix2vectorCp(Dj_gpu @ H)
-        res_gpu[2 * M * N : 3 * M * N] = matrix2vectorCp(H @ Dk_gpu.T)
-        res_gpu[3 * M * N :] = matrix2vectorCp(H @ Dl_gpu.T)
+        res_gpu[M * N: 2 * M * N] = matrix2vectorCp(Dj_gpu @ H)
+        res_gpu[2 * M * N: 3 * M * N] = matrix2vectorCp(H @ Dk_gpu.T)
+        res_gpu[3 * M * N:] = matrix2vectorCp(H @ Dl_gpu.T)
         return res_gpu
 
 
 def mult_DijklT(y: cp.ndarray, memptr) -> cp.ndarray:
-    print("mult_DijklT")
     with cp.cuda.Device(y.device.id):
         res_gpu = cp.ndarray((M, N), dtype=cp.float16, memptr=memptr)
         res_gpu[:] = Di_gpu.T @ vector2matrixCp(y[: M * N], M, N)
-        res_gpu[:] += Dj_gpu.T @ vector2matrixCp(y[M * N : 2 * M * N], M, N)
-        res_gpu[:] += vector2matrixCp(y[2 * M * N : 3 * M * N], M, N) @ Dk_gpu.T
-        res_gpu[:] += vector2matrixCp(y[3 * M * N :], M, N) @ Dl_gpu.T
+        res_gpu[:] += Dj_gpu.T @ vector2matrixCp(y[M * N: 2 * M * N], M, N)
+        res_gpu[:] += vector2matrixCp(y[2 * M * N: 3 * M * N], M, N) @ Dk_gpu.T
+        res_gpu[:] += vector2matrixCp(y[3 * M * N:], M, N) @ Dl_gpu.T
         return matrix2vectorCp(res_gpu)
 
 
 def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, resize=False):
     files = os.listdir(folder_path)
-    files.sort(key=lambda f: int(re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
+    files.sort(key=lambda f: int(
+        re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
     if rand:
         random.seed(SEED)
         random.shuffle(files)
@@ -116,7 +120,8 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, res
     total_files = len(files)
     number_of_files_to_load = int(total_files * ratio)
     selected_files = files[:number_of_files_to_load]
-    selected_files.sort(key=lambda f: int(re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
+    selected_files.sort(key=lambda f: int(
+        re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
 
     images = []
     use_list = []
@@ -135,13 +140,18 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, res
 
     return np.column_stack(images), use_list
 
-
 # %%
+
+
+def calculate_1st_term(g, X, h):
+    print("calculate_1st_term start")
+    return cp.linalg.norm(g - mult_mass(X, h)) ** 2
+
+
 def calculate_2nd_term(H):
     print("calculate_2nd_term start")
     column_sums = cp.sum(cp.abs(H), axis=1)
     result = cp.sum(column_sums**2)
-    print("calculate_2nd_term end")
     return result
 
 
@@ -150,23 +160,23 @@ def calculate_3rd_term(h, memptr):
     Du = mult_Dijkl(h, memptr)
     tv = cp.sum(
         cp.sqrt(
-            (Du[0 : M * N]) ** 2
-            + (Du[M * N : 2 * M * N]) ** 2
-            + (Du[2 * M * N : 3 * M * N]) ** 2
-            + (Du[3 * M * N :]) ** 2
+            (Du[0: M * N]) ** 2
+            + (Du[M * N: 2 * M * N]) ** 2
+            + (Du[2 * M * N: 3 * M * N]) ** 2
+            + (Du[3 * M * N:]) ** 2
         )
     )
     print("calculate_3rd_term end")
     return tv
 
-
 # %%
+
+
 def prox_l1(y: cp.ndarray, tau: float) -> cp.ndarray:
     return cp.sign(y) * cp.maximum(cp.absolute(y) - tau, 0)
 
 
 def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
-    print("prox_l122")
     l1_norms = cp.sum(cp.absolute(vector2matrixCp(y, M, N)), axis=1)
     factor = (2 * gamma) / (1 + 2 * gamma * N)
     X = cp.sign(vector2matrixCp(y, M, N)) * cp.maximum(
@@ -176,8 +186,8 @@ def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
 
 
 def prox_tv(y: cp.ndarray, gamma: float) -> cp.ndarray:
-    print("prox_tv")
-    Dx_norm = cp.linalg.norm(y.reshape(-1, 4, order="F"), axis=1).astype(cp.float16)
+    Dx_norm = cp.linalg.norm(
+        y.reshape(-1, 4, order="F"), axis=1).astype(cp.float16)
     Dx_norm = cp.tile(Dx_norm[:, None], (1, 4))
     return (cp.maximum(1 - gamma / Dx_norm, 0) * y.reshape(-1, 4, order="F")).reshape(-1, order="F")
 
@@ -206,14 +216,18 @@ def primal_dual_splitting(
     """
 
     with cp.cuda.Device(X.device.id):
-        h = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
-        h_old = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
+        h = cp.ndarray((M * N,), dtype=cp.float16,
+                       memptr=cp.cuda.malloc_managed(M * N * 2))
+        h_old = cp.ndarray((M * N,), dtype=cp.float16,
+                           memptr=cp.cuda.malloc_managed(M * N * 2))
         print(f"h GPU memory usage: {h.nbytes / 1024**2} MB")
         print(f"h_old GPU memory usage: {h_old.nbytes / 1024**2} MB")
 
     with cp.cuda.Device(g.device.id):
-        y = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
-        y_old = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+        y = cp.ndarray((4 * M * N,), dtype=cp.float16,
+                       memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+        y_old = cp.ndarray((4 * M * N,), dtype=cp.float16,
+                           memptr=cp.cuda.malloc_managed(4 * M * N * 2))
         print(f"y GPU memory usage: {y.nbytes / 1024**2} MB")
         print(f"y_old GPU memory usage: {y_old.nbytes / 1024**2} MB")
 
@@ -226,8 +240,8 @@ def primal_dual_splitting(
     y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f
-    tau = 1 / (4096 * 3)
-    sigma = 1 / (16384 * 3)
+    tau = 1 / (N * 3)
+    sigma = 1 / (M * 3)
     print(f"tau={tau}, sigma={sigma}")
 
     # start = time.perf_counter()
@@ -237,21 +251,25 @@ def primal_dual_splitting(
         y_old[:] = y[:]
 
         h[:] = prox_l122(
-            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old) - g)) - mult_DijklT(y_old, memptr_DT)),
+            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old) - g)
+                                     ) - mult_DijklT(y_old, memptr_DT)),
             tau * lambda1,
         )
 
-        y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old, memptr_D), sigma / lambda2)
+        y[:] = prox_conj(prox_tv, y_old + sigma *
+                         mult_Dijkl(2 * h - h_old, memptr_D), sigma / lambda2)
 
         # calculate 2nd term & 3rd term
         if k % 100 == 2:
+            print("1st", calculate_1st_term(g, X, h))
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
             print("3rd", calculate_3rd_term(h, memptr_D))
 
         if k == max_iter - 1:
             primal_residual = cp.linalg.norm(h - h_old)
             dual_residual = cp.linalg.norm(y - y_old)
-            print(f"iter={k}, primal_res={primal_residual:.4f}, dual_res={dual_residual:.4f}")
+            print(
+                f"iter={k}, primal_res={primal_residual:.4f}, dual_res={dual_residual:.4f}")
             break
         else:
             print(f"iter={k}")
@@ -264,8 +282,6 @@ def primal_dual_splitting(
         # "time": end - start,
     }
 
-    del h, h_old, y, y_old
-
     return cp.asnumpy(h), info
 
 
@@ -275,7 +291,8 @@ INFO = "cap_240814"
 G, use = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", resize=True)
 F, _ = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/")
 print("K=", F.shape[1])
-white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")
+white_img = Image.open(
+    f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")
 white_img = white_img.resize((m, m))
 white = np.asarray(white_img).flatten() / 255
 white = white[:, np.newaxis]
@@ -302,17 +319,18 @@ np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
 print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 
 SAMPLE_NAME = "Cameraman"
-sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert("L")
+sample_image = Image.open(
+    f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert('L')
 sample_image = np.asarray(sample_image).flatten() / 255
 
 Hf = H @ sample_image
 Hf_img = Hf.reshape(m, m)
 Hf_img = np.clip(Hf_img, 0, 1)
-Hf_pil = Image.fromarray((Hf_img * 255).astype(np.uint8), mode="L")
+Hf_pil = Image.fromarray((Hf_img * 255).astype(np.uint8), mode='L')
 
 FILENAME = f"{SAMPLE_NAME}_{SETTING}.png"
 fig, ax = plt.subplots(figsize=Hf_img.shape[::-1], dpi=1, tight_layout=True)
-ax.imshow(Hf_pil, cmap="gray")
-ax.axis("off")
+ax.imshow(Hf_pil, cmap='gray')
+ax.axis('off')
 fig.savefig(f"{DIRECTORY}/{FILENAME}", dpi=1)
 plt.show()

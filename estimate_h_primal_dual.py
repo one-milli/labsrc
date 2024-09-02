@@ -240,8 +240,8 @@ def primal_dual_splitting(
     y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f
-    tau = 1 / (N * 3)
-    sigma = 1 / (M * 3)
+    tau = 1 / (N * 1)
+    sigma = 1 / (M * 1)
     print(f"tau={tau}, sigma={sigma}")
 
     # start = time.perf_counter()
@@ -267,13 +267,13 @@ def primal_dual_splitting(
             primal_residual = cp.linalg.norm(h - h_old)
             dual_residual = cp.linalg.norm(y - y_old)
             print(
-                f"iter={k}, primal_res={primal_residual:.4f}, dual_res={dual_residual:.4f}")
+                f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")
 
         if k == max_iter - 1:
             primal_residual = cp.linalg.norm(h - h_old)
             dual_residual = cp.linalg.norm(y - y_old)
             print(
-                f"iter={k}, primal_res={primal_residual:.4f}, dual_res={dual_residual:.4f}")
+                f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")
             break
         else:
             print(f"iter={k}")

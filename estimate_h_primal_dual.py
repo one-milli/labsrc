@@ -257,7 +257,7 @@ def primal_dual_splitting(
         )
 
         y[:] = prox_conj(prox_tv, y_old + sigma *
-                         mult_Dijkl(2 * h - h_old, memptr_D), sigma / lambda2)
+                         mult_Dijkl(2 * h - h_old, memptr_D), sigma * lambda2)
 
         # calculate 2nd term & 3rd term
         if k % 20 == 2:

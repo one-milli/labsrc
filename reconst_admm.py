@@ -1,7 +1,7 @@
 # %%
 import numpy as np
 import cupy as cp
-import scipy.sparse as sps
+import scipy.sparse as ssp
 import scipy.io as sio
 import cupyx.scipy.sparse as csp
 from PIL import Image
@@ -22,25 +22,25 @@ cp.cuda.Device(3).use()
 
 # %%
 def createDrgb(n):
-    I = sps.eye(n**2, format="lil")
-
-    Dx = I - sps.lil_matrix(np.roll(I.toarray(), 1, axis=1))
-    Dx[n - 1 :: n, :] = 0
-    Dy = I - sps.lil_matrix(np.roll(I.toarray(), n, axis=1))
-    Dy[-n:, :] = 0
-    D0 = sps.lil_matrix((n**2, n**2))
-
-    D = sps.block_array([[Dx, D0, D0], [D0, Dx, D0], [D0, D0, Dx], [Dy, D0, D0], [D0, Dy, D0], [D0, D0, Dy]])
-
-    return D
-
-
-def createDmono(n):
     I = csp.eye(n**2, format="lil")
 
     Dx = I - csp.lil_matrix(np.roll(I.toarray(), 1, axis=1))
     Dx[n - 1 :: n, :] = 0
     Dy = I - csp.lil_matrix(np.roll(I.toarray(), n, axis=1))
+    Dy[-n:, :] = 0
+    D0 = csp.lil_matrix((n**2, n**2))
+
+    D = csp.block_array([[Dx, D0, D0], [D0, Dx, D0], [D0, D0, Dx], [Dy, D0, D0], [D0, Dy, D0], [D0, D0, Dy]])
+
+    return D
+
+
+def createDmono(n):
+    I = csp.eye(n**2, dtype=cp.float32, format="csr")
+
+    Dx = I - csp.csr_matrix(np.roll(I.toarray(), 1, axis=1))
+    Dx[n - 1 :: n, :] = 0
+    Dy = I - csp.csr_matrix(np.roll(I.toarray(), n, axis=1))
     Dy[-n:, :] = 0
 
     D = csp.vstack([Dx, Dy])
@@ -52,6 +52,7 @@ def createDmono(n):
 D = createDmono(n)
 # D = D.toarray()
 print("Created D")
+DTD = D.T @ D
 
 # %%
 # captured = Image.open(f"{DATA_PATH}/capture_240814/{OBJ_NAME}.png")

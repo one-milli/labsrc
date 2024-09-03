@@ -8,9 +8,9 @@ import cupy as cp
 
 class Admm:
     max_iter = 300
-    mu1 = 1e-5
-    mu2 = 1e-4
-    mu3 = 1e-4
+    mu1 = 1e-6
+    mu2 = 1e-5
+    mu3 = 1e-5
     tol = 1e-5
 
     def __init__(self, H, g, D, tau):
@@ -53,7 +53,8 @@ class Admm:
         self.f = cp.linalg.solve(A, self.r)
 
     def update_z(self):
-        self.z = self.soft_threshold(self.D @ self.f + self.eta / self.mu2, self.tau / self.mu2)
+        self.z = self.soft_threshold(
+            self.D @ self.f + self.eta / self.mu2, self.tau / self.mu2)
 
     def update_w(self):
         self.w = cp.clip(self.f + self.rho / self.mu3, 0, 1)

@@ -20,7 +20,7 @@ class Admm:
         self.D = csp.csr_matrix(cp.asarray(D))
         self.tau = tau
         # self.HTH = self.H.T @ self.H
-        self.HTH = csp.csr_matrix(cp.asarray(H).T @ cp.asarray(H))
+        self.HTH = csp.csr_matrix((cp.asarray(H).T @ cp.asarray(H)).astype(cp.float32))
         self.DTD = csp.csr_matrix(self.D.T @ self.D)
         self.m, self.n = self.H.shape
         self.r = cp.zeros((self.n, 1))

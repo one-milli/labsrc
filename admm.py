@@ -38,7 +38,7 @@ class Admm:
         return cp.linalg.norm(self.g - self.H @ self.f) ** 2 + self.tau * cp.linalg.norm(self.D @ self.f, 1)
 
     def compute_err(self, f):
-        return cp.asnumpy(cp.linalg.norm(f - self.f))
+        return cp.abs(cp.linalg.norm(f - self.f) / cp.linalg.norm(f))
 
     def update_r(self):
         self.r = (
@@ -82,12 +82,8 @@ class Admm:
             self.update_eta()
             self.update_rho()
             error = self.compute_err(pre_f)
-            if i > 0:
-                err_diff = abs(error - self.err[-1])
-            else:
-                err_diff = error
             self.err.append(error)
-            print("iter =", i, "err =", error, "diff =", err_diff)
-            if err_diff < self.tol:
+            print("iter =", i, "err =", error)
+            if error < self.tol:
                 break
         return cp.asnumpy(self.f), self.err

@@ -4,8 +4,6 @@ import os
 import re
 import numpy as np
 import cupy as cp
-import scipy.sparse as sps
-import scipy.io as sio
 import matplotlib.pyplot as plt
 from PIL import Image
 
@@ -29,9 +27,9 @@ class SystemMatrixMono:
                 img_vec = (2 * img - one).flatten()
                 images.append(img_vec)
         else:
-            white = np.asarray(Image.open(os.path.join(folder_path, "hadamard_1.png"))) / 255
+            white = np.asarray(Image.open(os.path.join(folder_path, "hadamard_1.png")).resize(self.m, self.m)) / 255
             for file in files:
-                img = np.asarray(Image.open(os.path.join(folder_path, file))) / 255
+                img = np.asarray(Image.open(os.path.join(folder_path, file)).resize(self.m, self.m)) / 255
                 img_vec = (2 * img - white).flatten()
                 images.append(img_vec)
         return np.column_stack(images)

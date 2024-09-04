@@ -46,9 +46,9 @@ def createDmono(n):
 
 
 # D = createDrgb(n)
-# D = createDmono(n)
-# D = D.toarray()
-# print("Created D")
+D = createDmono(n)
+D = D.toarray()
+print("Created D")
 
 # %%
 captured = Image.open(f"{DATA_PATH}/capture_240814/{OBJ_NAME}.png").convert("L")
@@ -61,8 +61,8 @@ H = np.load(f"{DATA_PATH}/240825/systemMatrix/H_matrix_{H_SETTING}.npy")
 print("H shape:", H.shape, "type(H):", type(H), "H.dtype:", H.dtype)
 
 # %%
-# admm = admm.Admm(H, g, D, tau)
-admm = admm_csp.Admm(H, g, tau)
+admm = admm.Admm(H, g, D, tau)
+# admm = admm_csp.Admm(H, g, tau)
 f, err = admm.solve()
 
 # %%

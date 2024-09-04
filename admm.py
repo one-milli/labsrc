@@ -4,6 +4,7 @@ min_f ||g-Hf||^2 + tau*||Df||_1 + i(f)
 """
 
 import cupy as cp
+import cupyx.scipy.sparse as csp
 
 
 class Admm:
@@ -16,10 +17,10 @@ class Admm:
     def __init__(self, H, g, D, tau):
         self.H = cp.asarray(H)
         self.g = cp.asarray(g)
-        self.D = cp.asarray(D)
+        self.D = csp.csr_matrix(cp.asarray(D))
         self.tau = tau
         self.HTH = self.H.T @ self.H
-        self.DTD = self.D.T @ self.D
+        self.DTD = csp.csr_matrix(self.D.T @ self.D)
         self.m, self.n = self.H.shape
         self.r = cp.zeros((self.n, 1))
         self.f = cp.ones((self.n, 1))

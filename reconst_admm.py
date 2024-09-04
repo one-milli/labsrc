@@ -59,6 +59,7 @@ g = captured.reshape(-1, 1)
 # %%
 H = np.load(f"{DATA_PATH}/240825/systemMatrix/H_matrix_{H_SETTING}.npy")
 print("H shape:", H.shape, "type(H):", type(H), "H.dtype:", H.dtype)
+H[abs(H) < 1e-4] = 0
 
 # %%
 admm = admm.Admm(H, g, D, tau)

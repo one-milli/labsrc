@@ -15,17 +15,11 @@ class Admm:
     tol = 1e-2
 
     def __init__(self, H, g, D, tau):
-        self.H = csp.csr_matrix(cp.asarray(H).astype(cp.float32))
-        print("nonzero num H:", self.H.nnz)
+        self.H = cp.asarray(H)
         self.g = cp.asarray(g)
         self.D = csp.csr_matrix(cp.asarray(D))
         self.tau = tau
-        # self.HTH = self.H.T @ self.H
-        buff = cp.asarray(H).T @ cp.asarray(H)
-        buff[cp.abs(buff) < 1e-4] = 0
-        self.HTH = csp.csr_matrix(buff.astype(cp.float32))
-        del buff
-        print("nonzero num HTH:", self.HTH.nnz)
+        self.HTH = self.H.T @ self.H
         self.DTD = csp.csr_matrix(self.D.T @ self.D)
         self.m, self.n = self.H.shape
         self.r = cp.zeros((self.n, 1))

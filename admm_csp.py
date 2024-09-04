@@ -3,7 +3,6 @@ Solver for problem below using ADMM
 min_f ||g-Hf||^2 + tau*||Df||_1 + i(f)
 """
 
-import numpy as np
 import cupy as cp
 import cupyx.scipy.sparse as csp
 
@@ -15,14 +14,19 @@ class Admm:
     mu3 = 1e-4
     tol = 1e-2
 
-    def __init__(self, H: np.ndarray, g: np.ndarray, tau):
-        self.H = self.process_sparse_H(H)
+    def __init__(self, H, g, D, tau):
+        self.H = csp.csr_matrix(cp.asarray(H).astype(cp.float32))
+        print("nonzero num H:", self.H.nnz)
         self.g = cp.asarray(g)
+        self.D = csp.csr_matrix(cp.asarray(D))
         self.tau = tau
-        self.HTH = self.H.T @ self.H
+        buff = cp.asarray(H).T @ cp.asarray(H)
+        buff[cp.abs(buff) < 1e-6] = 0
+        self.HTH = csp.csr_matrix(buff.astype(cp.float32))
+        del buff
+        print("nonzero num HTH:", self.HTH.nnz)
+        self.DTD = csp.csr_matrix(self.D.T @ self.D)
         self.m, self.n = self.H.shape
-        self.D = self.create_sparse_D()
-        self.DTD = self.D.T @ self.D
         self.r = cp.zeros((self.n, 1))
         self.f = cp.ones((self.n, 1))
         self.z = cp.zeros((self.D.shape[0], 1))
@@ -32,20 +36,6 @@ class Admm:
         self.eta = self.mu2 * self.D @ self.f
         self.rho = cp.zeros((self.n, 1))
         self.err = []
-
-    def process_sparse_H(self, H: np.ndarray):
-        H = cp.asarray(H).astype(cp.float32)
-        H[cp.abs(H) < 1e-6] = 0
-        print("nonzero num:", cp.count_nonzero(H))
-        return csp.csr_matrix(H)
-
-    def create_sparse_D(self) -> csp.csr_matrix:
-        I = csp.eye(self.n**2, format="csr")
-        Dx = I - csp.csr_matrix(cp.roll(cp.eye(self.n**2), 1, axis=1))
-        Dx[self.n - 1 :: self.n, :] = 0
-        Dy = I - csp.csr_matrix(cp.roll(cp.eye(self.n**2), self.n, axis=1))
-        Dy[-self.n :, :] = 0
-        return csp.vstack([Dx, Dy])
 
     def soft_threshold(self, x, sigma):
         return cp.maximum(0, cp.abs(x) - sigma) * cp.sign(x)

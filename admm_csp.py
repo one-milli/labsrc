@@ -34,7 +34,7 @@ class Admm:
         self.err = []
 
     def process_sparse_H(self, H: np.ndarray):
-        H = cp.asarray(H)
+        H = cp.asarray(H).astype(cp.float32)
         H[cp.abs(H) < 1e-6] = 0
         print("nonzero num:", cp.count_nonzero(H))
         return csp.csr_matrix(H)

@@ -15,7 +15,7 @@ class Admm:
     tol = 1e-2
 
     def __init__(self, H, g, D, tau):
-        self.H = csp.csr_matrix(cp.asarray(H))
+        self.H = csp.csr_matrix(cp.asarray(H).astype(cp.float32))
         self.g = cp.asarray(g)
         self.D = csp.csr_matrix(cp.asarray(D))
         self.tau = tau

@@ -247,13 +247,13 @@ def primal_dual_splitting(
             print("1st", calculate_1st_term(g, X, h))
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
             print("3rd", calculate_3rd_term(h, memptr_D))
-            primal_residual = cp.linalg.norm(h - h_old)
-            dual_residual = cp.linalg.norm(y - y_old)
+            primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
+            dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
             print(f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")
 
         if k == max_iter - 1:
-            primal_residual = cp.linalg.norm(h - h_old)
-            dual_residual = cp.linalg.norm(y - y_old)
+            primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
+            dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
             print(f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")
             break
         else:

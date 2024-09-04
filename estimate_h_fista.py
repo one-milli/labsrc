@@ -57,11 +57,11 @@ def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
     return matrix2vectorCp(res_gpu)
 
 
-def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, seed=SEED):
+def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, resize=False):
     files = os.listdir(folder_path)
     files.sort(key=lambda f: int(re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
     if rand:
-        random.seed(seed)
+        random.seed(SEED)
         random.shuffle(files)
 
     total_files = len(files)
@@ -78,6 +78,8 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, see
         img = Image.open(os.path.join(folder_path, file))
         if convert_gray:
             img = img.convert("L")
+        if resize:
+            img = img.resize((m, m))
         img_array = np.asarray(img).flatten()
         img_array = img_array / 255
         images.append(img_array)
@@ -139,7 +141,7 @@ def fista(
         h = prox(y_old - gamma * mult_mass(X.T, (mult_mass(X, y_old, M) - g), M), gamma * lmd)
         y = h + (t_old - 1) / t * (h - h_old)
 
-        error = cp.linalg.norm(y - y_old)
+        error = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
         print(f"iter: {i}, error: {error}")
         if error < tol:
             break
@@ -153,10 +155,11 @@ def fista(
 # %%
 # load images
 INFO = "cap_240814"
-G, use = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/")
+G, use = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", resize=True)
 F, _ = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/")
 print("K=", F.shape[1])
 white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")
+white_img = white_img.resize((m, m))
 white = np.asarray(white_img).flatten() / 255
 white = white[:, np.newaxis]
 H1 = np.tile(white, F.shape[1])
@@ -177,9 +180,6 @@ h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l122)
 H = vector2matrixNp(h, M, N)
 np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
 print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
-# H[np.abs(H) < 1e-5] = 0
-# H = sps.csr_matrix(H)
-# sio.mmwrite(f"{DIRECTORY}/systemMatrix/H_sparse_{SETTING}.mtx", H)
 
 SAMPLE_NAME = "Cameraman"
 sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert("L")

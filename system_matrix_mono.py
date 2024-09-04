@@ -13,7 +13,7 @@ class SystemMatrixMono:
         self.data_path = data_path
         self.pattern_name = pattern_name
         self.n = 128
-        self.m = 256
+        self.m = 192
 
     def load_images(self, folder_path, is_f=False):
         files = os.listdir(folder_path)
@@ -27,9 +27,12 @@ class SystemMatrixMono:
                 img_vec = (2 * img - one).flatten()
                 images.append(img_vec)
         else:
-            white = np.asarray(Image.open(os.path.join(folder_path, "hadamard_1.png")).resize(self.m, self.m)) / 255
+            white = (
+                np.asarray(Image.open(os.path.join(folder_path, "hadamard_1.png")).convert("L").resize(self.m, self.m))
+                / 255
+            )
             for file in files:
-                img = np.asarray(Image.open(os.path.join(folder_path, file)).resize(self.m, self.m)) / 255
+                img = np.asarray(Image.open(os.path.join(folder_path, file)).convert("L").resize(self.m, self.m)) / 255
                 img_vec = (2 * img - white).flatten()
                 images.append(img_vec)
         return np.column_stack(images)

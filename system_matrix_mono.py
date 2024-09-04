@@ -27,11 +27,16 @@ class SystemMatrixMono:
                 img_vec = (2 * img - one).flatten()
                 images.append(img_vec)
         else:
-            white = Image.open(os.path.join(folder_path, "hadamard_1.png")).convert("L")
-            white = np.asarray(white.resize(self.m, self.m)) / 255
+            white = (
+                np.asarray(
+                    Image.open(os.path.join(folder_path, "hadamard_1.png")).convert("L").resize((self.m, self.m))
+                )
+                / 255
+            )
             for file in files:
-                img = Image.open(os.path.join(folder_path, file)).convert("L")
-                img = np.asarray(img.resize(self.m, self.m)) / 255
+                img = (
+                    np.asarray(Image.open(os.path.join(folder_path, file)).convert("L").resize((self.m, self.m))) / 255
+                )
                 img_vec = (2 * img - white).flatten()
                 images.append(img_vec)
         return np.column_stack(images)

@@ -41,9 +41,9 @@ class Admm:
 
     def create_sparse_D(self) -> csp.csr_matrix:
         I = csp.eye(self.n**2, format="csr")
-        Dx = I - I.roll(1, axis=1)
+        Dx = I - csp.csr_matrix(cp.roll(cp.eye(self.n**2), 1, axis=1))
         Dx[self.n - 1 :: self.n, :] = 0
-        Dy = I - I.roll(self.n, axis=1)
+        Dy = I - csp.csr_matrix(cp.roll(cp.eye(self.n**2), self.n, axis=1))
         Dy[-self.n :, :] = 0
         return csp.vstack([Dx, Dy])
 

@@ -1,7 +1,6 @@
 # %%
 import numpy as np
 import scipy.sparse as ssp
-import scipy.io as sio
 from PIL import Image
 import admm
 import admm_csp
@@ -10,10 +9,10 @@ import admm_csp
 # DATA_PATH = '../../../OneDrive - m.titech.ac.jp/Lab/data'
 DATA_PATH = "../data"
 OBJ_NAME = "Cameraman"
-H_SETTING = "hadamard_pr-du_p-5_lmd1-10.0_lmd2-1000.0"
+H_SETTING = "hadamard_FISTA_l122_p-5_lmd-100"
 # H_SETTING = "gf"
 n = 128
-m = 192
+m = 256
 tau = 1e0
 
 
@@ -59,7 +58,7 @@ g = captured.reshape(-1, 1)
 # %%
 H = np.load(f"{DATA_PATH}/240825/systemMatrix/H_matrix_{H_SETTING}.npy")
 print("H shape:", H.shape, "type(H):", type(H), "H.dtype:", H.dtype)
-H[abs(H) < 1e-4] = 0
+# H[abs(H) < 1e-3] = 0
 
 # %%
 admm = admm.Admm(H, g, D, tau)

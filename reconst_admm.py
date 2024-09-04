@@ -4,6 +4,7 @@ import scipy.sparse as ssp
 import scipy.io as sio
 from PIL import Image
 import admm
+import admm_csp
 
 # %%
 # DATA_PATH = '../../../OneDrive - m.titech.ac.jp/Lab/data'
@@ -45,9 +46,9 @@ def createDmono(n):
 
 
 # D = createDrgb(n)
-D = createDmono(n)
-D = D.toarray()
-print("Created D")
+# D = createDmono(n)
+# D = D.toarray()
+# print("Created D")
 
 # %%
 captured = Image.open(f"{DATA_PATH}/capture_240814/{OBJ_NAME}.png").convert("L")
@@ -60,7 +61,8 @@ H = np.load(f"{DATA_PATH}/240825/systemMatrix/H_matrix_{H_SETTING}.npy")
 print("H shape:", H.shape, "type(H):", type(H), "H.dtype:", H.dtype)
 
 # %%
-admm = admm.Admm(H, g, D, tau)
+# admm = admm.Admm(H, g, D, tau)
+admm = admm_csp.Admm(H, g, tau)
 f, err = admm.solve()
 
 # %%

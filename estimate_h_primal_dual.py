@@ -225,13 +225,12 @@ def primal_dual_splitting(
     y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f
-    tau = 1e-4
-    sigma = 1e-2
+    tau = 1e-3
+    sigma = 1e-3
     print(f"tau={tau}, sigma={sigma}")
 
     # start = time.perf_counter()
     for k in range(max_iter):
-        # GPU memory usage check
         h_old[:] = h[:]
         y_old[:] = y[:]
 
@@ -243,13 +242,15 @@ def primal_dual_splitting(
         y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old, memptr_D), sigma * lambda2)
 
         # calculate 2nd term & 3rd term
-        if k % 100 == 90 or k == 5:
+        if k % 50 == 49:
             print("1st", calculate_1st_term(g, X, h))
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
             print("3rd", calculate_3rd_term(h, memptr_D))
             primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
             dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
             print(f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")
+            if primal_residual < 1e-3 and dual_residual < 1e-3:
+                break
 
         if k == max_iter - 1:
             primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)

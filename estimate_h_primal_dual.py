@@ -327,16 +327,18 @@ def primal_dual_splitting(
 
         y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old), sigma * lambda2)
 
-        # calculate 2nd term & 3rd term
-        if k % 50 == 49:
-            print("1st", calculate_1st_term(g, X, h))
-            print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
-            print("3rd", calculate_3rd_term(h))
+        if k % 5 == 4:
             primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
             dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
             print(f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")
             if primal_residual < 1e-3 and dual_residual < 1e-3:
                 break
+
+        # calculate 2nd term & 3rd term
+        if k % 50 == 49:
+            # print("1st", calculate_1st_term(g, X, h))
+            print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
+            print("3rd", calculate_3rd_term(h))
 
         if k == max_iter - 1:
             primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)

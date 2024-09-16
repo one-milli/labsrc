@@ -63,14 +63,21 @@ if not os.path.exists(DIRECTORY + "/systemMatrix"):
 
 
 def compute_differences(H):
+    # H is expected to be of shape (M, N)
+    # Reshape H into 4D tensor with shape (m, m, n, n)
     H = H.reshape(m, m, n, n, order="F")
-    # Compute differences along axes using convolution
-    di = ndi.convolve1d(H, weights=[-1, 1], axis=0, mode="constant", cval=0.0)
-    dj = ndi.convolve1d(H, weights=[-1, 1], axis=1, mode="constant", cval=0.0)
-    dk = ndi.convolve1d(H, weights=[-1, 1], axis=2, mode="constant", cval=0.0)
-    dl = ndi.convolve1d(H, weights=[-1, 1], axis=3, mode="constant", cval=0.0)
-    # Flatten the results if necessary
-    return cp.concatenate([di.ravel(), dj.ravel(), dk.ravel(), dl.ravel()])
+    # Compute differences along each axis
+    di = ndi.convolve1d(H, weights=cp.array([-1, 1]), axis=0, mode="constant", cval=0.0)
+    dj = ndi.convolve1d(H, weights=cp.array([-1, 1]), axis=1, mode="constant", cval=0.0)
+    dk = ndi.convolve1d(H, weights=cp.array([-1, 1]), axis=2, mode="constant", cval=0.0)
+    dl = ndi.convolve1d(H, weights=cp.array([-1, 1]), axis=3, mode="constant", cval=0.0)
+    # Flatten the results
+    di_flat = di.ravel(order="F")
+    dj_flat = dj.ravel(order="F")
+    dk_flat = dk.ravel(order="F")
+    dl_flat = dl.ravel(order="F")
+    # Concatenate the results
+    return cp.concatenate([di_flat, dj_flat, dk_flat, dl_flat])
 
 
 def compute_adjoint_differences(Du):
@@ -84,15 +91,15 @@ def compute_adjoint_differences(Du):
     # Initialize the result
     H_adj = cp.zeros((m, m, n, n), dtype=Du.dtype)
 
-    # Convolve with adjoint kernels
-    # For di (axis=0), the adjoint convolution kernel is [1, -1]
-    H_adj += ndi.convolve1d(di, weights=[1, -1], axis=0, mode="constant", cval=0.0)
+    # Convolve with adjoint kernels (flip and sign change)
+    # For di (axis=0), the adjoint convolution kernel is [1, -1] (flipped and sign-changed)
+    H_adj += ndi.convolve1d(di, weights=cp.array([1, -1]), axis=0, mode="constant", cval=0.0)
     # For dj (axis=1)
-    H_adj += ndi.convolve1d(dj, weights=[1, -1], axis=1, mode="constant", cval=0.0)
+    H_adj += ndi.convolve1d(dj, weights=cp.array([1, -1]), axis=1, mode="constant", cval=0.0)
     # For dk (axis=2)
-    H_adj += ndi.convolve1d(dk, weights=[1, -1], axis=2, mode="constant", cval=0.0)
+    H_adj += ndi.convolve1d(dk, weights=cp.array([1, -1]), axis=2, mode="constant", cval=0.0)
     # For dl (axis=3)
-    H_adj += ndi.convolve1d(dl, weights=[1, -1], axis=3, mode="constant", cval=0.0)
+    H_adj += ndi.convolve1d(dl, weights=cp.array([1, -1]), axis=3, mode="constant", cval=0.0)
 
     # Flatten the result
     H_adj_flat = H_adj.ravel(order="F")

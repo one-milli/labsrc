@@ -23,8 +23,8 @@ n = 128
 m = 192
 N = n**2
 M = m**2
-LAMBDA1 = 1e1
-LAMBDA2 = 1e3
+LAMBDA1 = 1e2
+LAMBDA2 = 1e4
 SEED = 5
 RATIO = 0.05
 ITER = 300
@@ -311,8 +311,8 @@ def primal_dual_splitting(
     y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f
-    tau = 1e-4
-    sigma = 1e-2
+    tau = 1e-5
+    sigma = 1e-1
     print(f"tau={tau}, sigma={sigma}")
 
     # start = time.perf_counter()
@@ -344,6 +344,8 @@ def primal_dual_splitting(
             primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
             dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
             print(f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")
+            print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
+            print("3rd", calculate_3rd_term(h))
             break
         else:
             print(f"iter={k}")
@@ -388,8 +390,8 @@ h, info = primal_dual_splitting(F_hat_T_gpu, g_gpu, LAMBDA1, LAMBDA2)
 
 # %%
 H = vector2matrixNp(h, M, N)
-np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
-print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
+# np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
+# print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 
 SAMPLE_NAME = "Cameraman"
 sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert("L")
@@ -405,4 +407,5 @@ fig, ax = plt.subplots(figsize=Hf_img.shape[::-1], dpi=1, tight_layout=True)
 ax.imshow(Hf_pil, cmap="gray")
 ax.axis("off")
 fig.savefig(f"{DIRECTORY}/{FILENAME}", dpi=1)
-plt.show()
+# plt.show()
+print(f"Saved {DIRECTORY}/{FILENAME}")

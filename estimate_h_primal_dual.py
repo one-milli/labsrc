@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from scipy import sparse
 import cupyx.scipy.sparse as csp
+import cupyx.scipy.ndimage as ndi
 
 # %%
 n = 128
@@ -37,28 +38,65 @@ if not os.path.exists(DIRECTORY):
 if not os.path.exists(DIRECTORY + "/systemMatrix"):
     os.makedirs(DIRECTORY + "/systemMatrix")
 
-cp.cuda.Device(2).use()
-cp.cuda.Device(3).use()
+# cp.cuda.Device(2).use()
+# cp.cuda.Device(3).use()
 
 # %%
-Di_gpu = csp.eye(M, dtype=cp.float32, format="csr") - csp.eye(M, k=m, dtype=cp.float32, format="csr")
-Di_gpu[-m:, :] = 0
+# Di_gpu = csp.eye(M, dtype=cp.float32, format='csr') - csp.eye(M, k=m, dtype=cp.float32, format='csr')
+# Di_gpu[-m:, :] = 0
 
-Dj_gpu = csp.eye(M, dtype=cp.float32, format="csr") - csp.eye(M, k=1, dtype=cp.float32, format="csr")
-for p in range(1, m + 1):
-    Dj_gpu[m * p - 1, m * p - 1] = 0
-    if p < m:
-        Dj_gpu[m * p - 1, m * p] = 0
+# Dj_gpu = csp.eye(M, dtype=cp.float32, format='csr') - csp.eye(M, k=1, dtype=cp.float32, format='csr')
+# for p in range(1, m + 1):
+#     Dj_gpu[m * p - 1, m * p - 1] = 0
+#     if p < m:
+#         Dj_gpu[m * p - 1, m * p] = 0
 
-Dk_gpu = csp.eye(N, dtype=cp.float32, format="csr") - csp.eye(N, k=n, dtype=cp.float32, format="csr")
-Dk_gpu = csp.csr_matrix(Dk_gpu[: n * (n - 1), :N])
-Dk_gpu = csp.vstack([Dk_gpu, csp.csr_matrix((n, N))])
+# Dk_gpu = csp.eye(N, dtype=cp.float32, format='csr') - csp.eye(N, k=n, dtype=cp.float32, format='csr')
+# Dk_gpu = csp.csr_matrix(Dk_gpu[:n * (n - 1), :N])
+# Dk_gpu = csp.vstack([Dk_gpu, csp.csr_matrix((n, N))])
 
-Dl_gpu = csp.eye(N, dtype=cp.float32, format="csr") - csp.eye(N, k=1, dtype=cp.float32, format="csr")
-for p in range(1, n + 1):
-    Dl_gpu[n * p - 1, n * p - 1] = 0
-    if p < n:
-        Dl_gpu[n * p - 1, n * p] = 0
+# Dl_gpu = csp.eye(N, dtype=cp.float32, format='csr') - csp.eye(N, k=1, dtype=cp.float32, format='csr')
+# for p in range(1, n + 1):
+#     Dl_gpu[n * p - 1, n * p - 1] = 0
+#     if p < n:
+#         Dl_gpu[n * p - 1, n * p] = 0
+
+
+def compute_differences(H):
+    H = H.reshape(m, m, n, n, order="F")
+    # Compute differences along axes using convolution
+    di = ndi.convolve1d(H, weights=[-1, 1], axis=0, mode="constant", cval=0.0)
+    dj = ndi.convolve1d(H, weights=[-1, 1], axis=1, mode="constant", cval=0.0)
+    dk = ndi.convolve1d(H, weights=[-1, 1], axis=2, mode="constant", cval=0.0)
+    dl = ndi.convolve1d(H, weights=[-1, 1], axis=3, mode="constant", cval=0.0)
+    # Flatten the results if necessary
+    return cp.concatenate([di.ravel(), dj.ravel(), dk.ravel(), dl.ravel()])
+
+
+def compute_adjoint_differences(Du):
+    # Du contains concatenated differences: di, dj, dk, dl
+    total_elements = M * N
+    di = Du[0:total_elements].reshape(m, m, n, n, order="F")
+    dj = Du[total_elements : 2 * total_elements].reshape(m, m, n, n, order="F")
+    dk = Du[2 * total_elements : 3 * total_elements].reshape(m, m, n, n, order="F")
+    dl = Du[3 * total_elements :].reshape(m, m, n, n, order="F")
+
+    # Initialize the result
+    H_adj = cp.zeros((m, m, n, n), dtype=Du.dtype)
+
+    # Convolve with adjoint kernels
+    # For di (axis=0), the adjoint convolution kernel is [1, -1]
+    H_adj += ndi.convolve1d(di, weights=[1, -1], axis=0, mode="constant", cval=0.0)
+    # For dj (axis=1)
+    H_adj += ndi.convolve1d(dj, weights=[1, -1], axis=1, mode="constant", cval=0.0)
+    # For dk (axis=2)
+    H_adj += ndi.convolve1d(dk, weights=[1, -1], axis=2, mode="constant", cval=0.0)
+    # For dl (axis=3)
+    H_adj += ndi.convolve1d(dl, weights=[1, -1], axis=3, mode="constant", cval=0.0)
+
+    # Flatten the result
+    H_adj_flat = H_adj.ravel(order="F")
+    return H_adj_flat
 
 
 # %%
@@ -79,28 +117,36 @@ def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
 
 
 def mult_mass(X: cp.ndarray, h: cp.ndarray) -> cp.ndarray:
-    return matrix2vectorCp((h.reshape(M, -1, order="F") @ X.T).astype(cp.float16))
+    return (h.reshape(M, -1, order="F") @ X.T).ravel(order="F")
 
 
-def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
-    with cp.cuda.Device(h.device.id):
-        H = vector2matrixCp(h, M, N)
-        res_gpu = cp.ndarray((4 * M * N), dtype=cp.float16, memptr=memptr)
-        res_gpu[: M * N] = matrix2vectorCp(Di_gpu @ H)
-        res_gpu[M * N : 2 * M * N] = matrix2vectorCp(Dj_gpu @ H)
-        res_gpu[2 * M * N : 3 * M * N] = matrix2vectorCp(H @ Dk_gpu.T)
-        res_gpu[3 * M * N :] = matrix2vectorCp(H @ Dl_gpu.T)
-        return res_gpu
+def mult_Dijkl(h: cp.ndarray) -> cp.ndarray:
+    return compute_differences(h.reshape(M, N, order="F"))
 
 
-def mult_DijklT(y: cp.ndarray, memptr) -> cp.ndarray:
-    with cp.cuda.Device(y.device.id):
-        res_gpu = cp.ndarray((M, N), dtype=cp.float16, memptr=memptr)
-        res_gpu[:] = Di_gpu.T @ vector2matrixCp(y[: M * N], M, N)
-        res_gpu[:] += Dj_gpu.T @ vector2matrixCp(y[M * N : 2 * M * N], M, N)
-        res_gpu[:] += vector2matrixCp(y[2 * M * N : 3 * M * N], M, N) @ Dk_gpu.T
-        res_gpu[:] += vector2matrixCp(y[3 * M * N :], M, N) @ Dl_gpu.T
-        return matrix2vectorCp(res_gpu)
+# def mult_Dijkl(h: cp.ndarray, memptr) -> cp.ndarray:
+# with cp.cuda.Device(h.device.id):
+#     H = vector2matrixCp(h, M, N)
+#     res_gpu = cp.ndarray((4 * M * N), dtype=cp.float16, memptr=memptr)
+#     res_gpu[: M * N] = matrix2vectorCp(Di_gpu @ H)
+#     res_gpu[M * N : 2 * M * N] = matrix2vectorCp(Dj_gpu @ H)
+#     res_gpu[2 * M * N : 3 * M * N] = matrix2vectorCp(H @ Dk_gpu.T)
+#     res_gpu[3 * M * N :] = matrix2vectorCp(H @ Dl_gpu.T)
+#     return res_gpu
+
+
+def mult_DijklT(y: cp.ndarray) -> cp.ndarray:
+    return compute_adjoint_differences(y)
+
+
+# def mult_DijklT(y: cp.ndarray, memptr) -> cp.ndarray:
+#     with cp.cuda.Device(y.device.id):
+#         res_gpu = cp.ndarray((M, N), dtype=cp.float16, memptr=memptr)
+#         res_gpu[:] = Di_gpu.T @ vector2matrixCp(y[: M * N], M, N)
+#         res_gpu[:] += Dj_gpu.T @ vector2matrixCp(y[M * N : 2 * M * N], M, N)
+#         res_gpu[:] += vector2matrixCp(y[2 * M * N : 3 * M * N], M, N) @ Dk_gpu.T
+#         res_gpu[:] += vector2matrixCp(y[3 * M * N :], M, N) @ Dl_gpu.T
+#         return matrix2vectorCp(res_gpu)
 
 
 def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, resize=False):
@@ -146,9 +192,9 @@ def calculate_2nd_term(H):
     return result
 
 
-def calculate_3rd_term(h, memptr):
+def calculate_3rd_term(h):
     print("calculate_3rd_term start")
-    Du = mult_Dijkl(h, memptr)
+    Du = mult_Dijkl(h)
     tv = cp.sum(
         cp.sqrt(
             (Du[0 : M * N]) ** 2
@@ -167,12 +213,20 @@ def prox_l1(y: cp.ndarray, tau: float) -> cp.ndarray:
 
 
 def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
-    l1_norms = cp.sum(cp.absolute(vector2matrixCp(y, M, N)), axis=1)
-    factor = (2 * gamma) / (1 + 2 * gamma * N)
-    X = cp.sign(vector2matrixCp(y, M, N)) * cp.maximum(
-        cp.absolute(vector2matrixCp(y, M, N)) - factor * l1_norms[:, None], 0
-    )
-    return matrix2vectorCp(X)
+    H = y.reshape(M, N, order="F")
+    row_norms = cp.linalg.norm(H, ord=1, axis=1, keepdims=True)
+    scaling_factors = cp.maximum(1 - gamma / (row_norms + 1e-8), 0)
+    H_prox = H * scaling_factors
+    return H_prox.ravel(order="F")
+
+
+# def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
+#     l1_norms = cp.sum(cp.absolute(vector2matrixCp(y, M, N)), axis=1)
+#     factor = (2 * gamma) / (1 + 2 * gamma * N)
+#     X = cp.sign(vector2matrixCp(y, M, N)) * cp.maximum(
+#         cp.absolute(vector2matrixCp(y, M, N)) - factor * l1_norms[:, None], 0
+#     )
+#     return matrix2vectorCp(X)
 
 
 def prox_tv(y: cp.ndarray, gamma: float) -> cp.ndarray:
@@ -205,19 +259,23 @@ def primal_dual_splitting(
     """
 
     with cp.cuda.Device(X.device.id):
-        h = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
-        h_old = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
+        h = cp.zeros((M * N,), dtype=cp.float16)
+        # h = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
+        h_old = cp.zeros_like(h)
+        # h_old = cp.ndarray((M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(M * N * 2))
         print(f"h GPU memory usage: {h.nbytes / 1024**2} MB")
         print(f"h_old GPU memory usage: {h_old.nbytes / 1024**2} MB")
 
     with cp.cuda.Device(g.device.id):
-        y = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
-        y_old = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+        y = cp.zeros((4 * M * N,), dtype=cp.float16)
+        # y = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
+        y_old = cp.zeros_like(y)
+        # y_old = cp.ndarray((4 * M * N,), dtype=cp.float16, memptr=cp.cuda.malloc_managed(4 * M * N * 2))
         print(f"y GPU memory usage: {y.nbytes / 1024**2} MB")
         print(f"y_old GPU memory usage: {y_old.nbytes / 1024**2} MB")
 
-    memptr_D = cp.cuda.malloc_managed(4 * M * N * 2)
-    memptr_DT = cp.cuda.malloc_managed(M * N * 2)
+    # memptr_D = cp.cuda.malloc_managed(4 * M * N * 2)
+    # memptr_DT = cp.cuda.malloc_managed(M * N * 2)
 
     h[:] = 1e-5
     h_old[:] = 0
@@ -225,8 +283,8 @@ def primal_dual_splitting(
     y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f
-    tau = 1e-3
-    sigma = 1e-3
+    tau = 1e-4
+    sigma = 1e-2
     print(f"tau={tau}, sigma={sigma}")
 
     # start = time.perf_counter()
@@ -235,17 +293,17 @@ def primal_dual_splitting(
         y_old[:] = y[:]
 
         h[:] = prox_l122(
-            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old) - g)) - mult_DijklT(y_old, memptr_DT)),
+            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old) - g)) - mult_DijklT(y_old)),
             tau * lambda1,
         )
 
-        y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old, memptr_D), sigma * lambda2)
+        y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old), sigma * lambda2)
 
         # calculate 2nd term & 3rd term
         if k % 50 == 49:
             print("1st", calculate_1st_term(g, X, h))
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
-            print("3rd", calculate_3rd_term(h, memptr_D))
+            print("3rd", calculate_3rd_term(h))
             primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
             dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
             print(f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")

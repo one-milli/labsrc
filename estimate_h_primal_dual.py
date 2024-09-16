@@ -24,10 +24,10 @@ m = 192
 N = n**2
 M = m**2
 LAMBDA1 = 1e2
-LAMBDA2 = 1e4
+LAMBDA2 = 1e2
 SEED = 5
 RATIO = 0.05
-ITER = 300
+ITER = 500
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
 DIRECTORY = DATA_PATH + "/240825"
@@ -236,6 +236,30 @@ def calculate_3rd_term(h):
 
 
 # %%
+def estimate_operator_norm(K, K_adj, X, shape, tol=1e-6, max_iter=100):
+    x = cp.random.randn(shape).astype(cp.float32)
+    x /= cp.linalg.norm(x)
+    for _ in range(max_iter):
+        x_new = K_adj(K(x, X), X)
+        x_new_norm = cp.linalg.norm(x_new)
+        x_new /= x_new_norm
+        if cp.abs(x_new_norm - cp.linalg.norm(x)) < tol:
+            break
+        x = x_new
+    return x_new_norm
+
+
+def K(h, X):
+    return cp.concatenate([mult_mass(X, h), mult_Dijkl(h)])
+
+
+def K_adj(u, X):
+    u1 = u[: len(g)]
+    u2 = u[len(g) :]
+    return mult_mass(X.T, u1) + mult_DijklT(u2)
+
+
+# %%
 def prox_l1(y: cp.ndarray, tau: float) -> cp.ndarray:
     return cp.sign(y) * cp.maximum(cp.absolute(y) - tau, 0)
 
@@ -311,32 +335,37 @@ def primal_dual_splitting(
     y_old[:] = 0
 
     # Compute Lipschitz constant of grad_f
-    tau = 1e-5
-    sigma = 1e-1
-    print(f"tau={tau}, sigma={sigma}")
+    L = estimate_operator_norm(K, K_adj, X, h.shape[0])
+    print(f"Estimated operator norm L: {L}")
+    theta = 0.9  # 0 < theta < 1
+    tau = theta / L
+    sigma = theta / L
+    print(f"tau={tau}, sigma={sigma}, tau*sigma*L^2={tau * sigma * L**2}")
+
+    # tau = 1e-4
+    # sigma = 1e-1
+    # print(f"tau={tau}, sigma={sigma}")
 
     # start = time.perf_counter()
     for k in range(max_iter):
         h_old[:] = h[:]
         y_old[:] = y[:]
 
-        h[:] = prox_l122(
+        h[:] = prox_l1(
             h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old) - g)) - mult_DijklT(y_old)),
             tau * lambda1,
         )
 
         y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old), sigma * lambda2)
 
-        if k % 5 == 4:
+        if k % 10 == 9:
             primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
             dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
             print(f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")
             if primal_residual < 1e-3 and dual_residual < 1e-3:
                 break
 
-        # calculate 2nd term & 3rd term
         if k % 50 == 49:
-            # print("1st", calculate_1st_term(g, X, h))
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
             print("3rd", calculate_3rd_term(h))
 
@@ -344,6 +373,7 @@ def primal_dual_splitting(
             primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
             dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
             print(f"iter={k}, primal_res={primal_residual:.8f}, dual_res={dual_residual:.8f}")
+            print("1st", calculate_1st_term(g, X, h))
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))
             print("3rd", calculate_3rd_term(h))
             break

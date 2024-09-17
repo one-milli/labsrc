@@ -179,7 +179,7 @@ def prox_l1(y: cp.ndarray, tau: float) -> cp.ndarray:
 
 def prox_tv(y: cp.ndarray, gamma: float) -> cp.ndarray:
     y_reshaped = y.reshape(-1, 4, order="F")
-    y_norm = cp.linalg.norm(y_reshaped, axis=1, keepdims=True) + 1e-15  # Avoid division by zero
+    y_norm = cp.linalg.norm(y_reshaped, axis=1, keepdims=True)
     scaling = cp.maximum(1 - gamma / y_norm, 0)
     return (y_reshaped * scaling).reshape(-1, order="F")
 
@@ -230,6 +230,8 @@ def primal_dual_splitting(
             if primal_residual < 1e-3 and dual_residual < 1e-3:
                 print("Convergence criteria met.")
                 break
+        else:
+            print(f"iter={k}")
 
         if k % 50 == 49:
             print("2nd", calculate_2nd_term(vector2matrixCp(h, M, N)))

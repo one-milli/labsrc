@@ -9,6 +9,7 @@ import numpy as np
 import scipy as sp
 import scipy.sparse as sps
 import scipy.io as sio
+from cupyx.scipy import sparse as cps
 import matplotlib.pyplot as plt
 from PIL import Image
 
@@ -24,7 +25,7 @@ RATIO = 0.1
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
 DIRECTORY = DATA_PATH + "/240825"
-REG = "l122"
+REG = "l1"
 SETTING = f"{IMG_NAME}_FISTA_{REG}_p-{int(100*RATIO)}_lmd-{LAMBDA}"
 
 if not os.path.exists(DIRECTORY):
@@ -34,27 +35,13 @@ if not os.path.exists(DIRECTORY + "/systemMatrix"):
 
 
 # %%
-def matrix2vectorNp(matrix: np.ndarray) -> np.ndarray:
-    return matrix.reshape(-1, 1, order="F").flatten().astype(np.float32)
-
-
-def matrix2vectorCp(matrix: cp.ndarray) -> cp.ndarray:
-    return matrix.reshape(-1, 1, order="F").flatten().astype(cp.float32)
-
-
-def vector2matrixNp(vector: np.ndarray, s: int, t: int) -> np.ndarray:
-    return vector.reshape(s, t, order="F").astype(np.float32)
-
-
 def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
     return vector.reshape(s, t, order="F").astype(cp.float32)
 
 
 def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
-    F_gpu = X.T.astype(cp.float32)
     H_gpu = cp.asarray(h.reshape(M, -1, order="F"))
-    res_gpu = H_gpu @ F_gpu
-    return matrix2vectorCp(res_gpu)
+    return (H_gpu @ X.T).flatten(order="F")
 
 
 def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, resize=False):
@@ -98,7 +85,7 @@ def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
     factor = (2 * gamma) / (1 + 2 * gamma * N)
     X = cp.zeros_like(Y)
     X = cp.sign(Y) * cp.maximum(cp.absolute(Y) - factor * l1_norms[:, None], 0)
-    return matrix2vectorCp(X)
+    return X.flatten(order="F")
 
 
 def fista(
@@ -111,7 +98,7 @@ def fista(
 ) -> np.ndarray:
     """
     Solve the optimization problem using FISTA:
-    min_h ||g - Fh||_2^2 + lambda * ||h||_1
+    min_h ||g - Xh||_2^2 + lambda * ||h||_1
 
     Parameters:
     - X: numpy array, the matrix X
@@ -122,14 +109,17 @@ def fista(
     - h: numpy array, the solution vector h
     """
     t = 1
-    h = cp.zeros(M * N, dtype=cp.float32)
-    h_old = cp.zeros(M * N, dtype=cp.float32)
-    y = cp.zeros(M * N, dtype=cp.float32)
-    y_old = cp.zeros(M * N, dtype=cp.float32)
+    h = cp.zeros(X.shape[1], dtype=cp.float32)
+    h_old = cp.zeros_like(h)
+    y = cp.zeros_like(h)
+    y_old = cp.zeros_like(y)
 
     # Lipschitz constant
     # L = np.linalg.norm(X.T @ X, ord=2) * 3
     gamma = 1 / (4096 * 3)
+    switched_to_sparse = False
+    sparsity_threshold = 1e-6
+    switch_to_sparse_iter = 100
 
     start = time.perf_counter()
     for i in range(max_iter):
@@ -139,15 +129,30 @@ def fista(
 
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
         h = prox(y_old - gamma * mult_mass(X.T, (mult_mass(X, y_old, M) - g), M), gamma * lmd)
+        h = cp.where(cp.abs(h) < sparsity_threshold, 0, h)
+        if not switched_to_sparse and i >= switch_to_sparse_iter:
+            sparsity_level = cp.count_nonzero(h) / h.size
+            if sparsity_level < 0.1:  # 非ゼロ要素が全体の10%未満の場合
+                h = cps.csr_matrix(h)
+                y = cps.csr_matrix(y)
+                grad = cps.csr_matrix(grad)
+                switched_to_sparse = True
+                print(f"Iteration {i}: Switched to sparse representation.")
         y = h + (t_old - 1) / t * (h - h_old)
 
-        error = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
+        if switched_to_sparse:
+            error = cp.linalg.norm((y - y_old).toarray()) / cp.linalg.norm(y.toarray())
+        else:
+            error = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
+
         print(f"iter: {i}, error: {error}")
         if error < tol:
             break
 
     end = time.perf_counter()
     print(f"Elapsed time: {end-start}")
+    if switched_to_sparse:
+        h = h.toarray().flatten()
 
     return cp.asnumpy(y)
 
@@ -166,7 +171,7 @@ H1 = np.tile(white, F.shape[1])
 F_hat = 2 * F - 1
 G_hat = 2 * G - H1
 
-g = matrix2vectorNp(G_hat)
+g = G_hat.flatten(order="F")
 
 # %%
 F_hat_T_gpu = cp.asarray(F_hat.T).astype(cp.float32)
@@ -174,10 +179,10 @@ g_gpu = cp.asarray(g).astype(cp.float32)
 del F, G, H1, F_hat, G_hat
 
 # %%
-h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l122)
+h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l1)
 
 # %%
-H = vector2matrixNp(h, M, N)
+H = h.reshape(G_hat.shape[0], N, order="F")
 np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
 print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 

@@ -166,9 +166,9 @@ def primal_dual_splitting(
     N = X.shape[1]
     M = g.shape[0] // K
     print_memory_usage("Before initializing variables")
-    h = cp.zeros(M * N, dtype=cp.float32)
+    h = cp.zeros(M * N, dtype=cp.float16)
     h_old = cp.zeros_like(h)
-    y = cp.zeros(4 * M * N, dtype=cp.float32)
+    y = cp.zeros(4 * M * N, dtype=cp.float16)
     y_old = cp.zeros_like(y)
     print_memory_usage("After initializing variables")
 
@@ -261,7 +261,7 @@ G_vec = G_hat.ravel(order="F")
 
 # %%
 F_hat_T_gpu = cp.asarray(F_hat.T).astype(cp.int8)
-g_gpu = cp.asarray(G_vec).astype(cp.float32)
+g_gpu = cp.asarray(G_vec).astype(cp.float16)
 
 print(f"F device: {F_hat_T_gpu.device}")
 print(f"g device: {g_gpu.device}")

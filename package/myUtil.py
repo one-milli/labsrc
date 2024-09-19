@@ -6,8 +6,7 @@ from PIL import Image, ImageFilter
 import matplotlib.pyplot as plt
 
 
-def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=0.05, resize=False):
-    m = 256
+def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=0.05, resize=False, ressize=256):
     SEED = 5
     IMG_NAME = "hadamard"
     files = os.listdir(folder_path)
@@ -31,7 +30,7 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=0.05, resi
         if convert_gray:
             img = img.convert("L")
         if resize:
-            img = img.resize((m, m))
+            img = img.resize((ressize, ressize))
         img_array = np.asarray(img).flatten()
         img_array = img_array / 255
         images.append(img_array)

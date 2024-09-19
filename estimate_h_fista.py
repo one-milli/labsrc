@@ -20,7 +20,7 @@ RATIO = 0.05
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
 DIRECTORY = DATA_PATH + "/240825"
-REG = "l1"
+REG = "l122"
 SETTING = f"{IMG_NAME}_FISTA_{REG}_p-{int(100*RATIO)}_lmd-{LAMBDA}"
 
 if not os.path.exists(DIRECTORY):
@@ -31,7 +31,7 @@ if not os.path.exists(DIRECTORY + "/systemMatrix"):
 
 # %%
 def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
-    return vector.reshape(s, t, order="F").astype(cp.float32)
+    return vector.reshape(s, t, order="F")
 
 
 def mult_mass(X: cp.ndarray, h: cp.ndarray) -> cp.ndarray:
@@ -133,7 +133,7 @@ g_gpu = cp.asarray(g).astype(cp.float32)
 del F, G, H1, F_hat, G_hat
 
 # %%
-h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l1)
+h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l122)
 
 # %%
 H = h.reshape(g.shape[0] // K, N, order="F")  # cupy

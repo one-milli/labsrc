@@ -77,7 +77,8 @@ def fista(
     N = X.shape[1]
     M = g.shape[0] // K
     t = 1
-    h = cp.zeros((M * N, 1), dtype=cp.float32)
+    h = cp.zeros(M * N, dtype=cp.float32)
+    print(h.shape)
     h_old = cp.zeros_like(h)
     y = cp.zeros_like(h)
     # h = cps.csr_matrix((M * N, 1), dtype=cp.float32)
@@ -98,7 +99,7 @@ def fista(
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
         y = h + (t_old - 1) / t * (h - h_old)
 
-        error = cp.linalg.norm((h - h_old).toarray()) / cp.linalg.norm(h.toarray())
+        error = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
 
         print(f"iter: {i}, error: {error}")
         if error < tol:

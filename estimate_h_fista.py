@@ -132,10 +132,11 @@ def fista(
         h = cp.where(cp.abs(h) < sparsity_threshold, 0, h)
         if not switched_to_sparse and i >= switch_to_sparse_iter:
             sparsity_level = cp.count_nonzero(h) / h.size
-            if sparsity_level < 0.1:  # 非ゼロ要素が全体の10%未満の場合
+            if sparsity_level < 0.1:
                 h = cps.csr_matrix(h)
+                h_old = cps.csr_matrix(h_old)
                 y = cps.csr_matrix(y)
-                grad = cps.csr_matrix(grad)
+                y_old = cps.csr_matrix(y_old)
                 switched_to_sparse = True
                 print(f"Iteration {i}: Switched to sparse representation.")
         y = h + (t_old - 1) / t * (h - h_old)

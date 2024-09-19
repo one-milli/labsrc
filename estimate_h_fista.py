@@ -60,7 +60,7 @@ def fista(
     prox: Callable[[cp.ndarray, float], cp.ndarray],
     max_iter: int = 500,
     tol: float = 1e-3,
-) -> np.ndarray:
+) -> cp.ndarray:
     """
     Solve the optimization problem using FISTA:
     min_h ||g - Xh||_2^2 + lambda * ||h||_1
@@ -78,7 +78,6 @@ def fista(
     M = g.shape[0] // K
     t = 1
     h = cp.zeros(M * N, dtype=cp.float32)
-    print(h.shape)
     h_old = cp.zeros_like(h)
     y = cp.zeros_like(h)
     # h = cps.csr_matrix((M * N, 1), dtype=cp.float32)
@@ -108,7 +107,7 @@ def fista(
     end = time.perf_counter()
     print(f"Elapsed time: {end-start}")
 
-    return cp.asnumpy(y)
+    return h
 
 
 # %%
@@ -137,16 +136,16 @@ del F, G, H1, F_hat, G_hat
 h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l1)
 
 # %%
-H = h.reshape(g.shape[0] // K, N, order="F")
+H = h.reshape(g.shape[0] // K, N, order="F")  # cupy
 # np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
 # print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 
 SAMPLE_NAME = "Cameraman"
 sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert("L")
-sample_image = np.asarray(sample_image).flatten() / 255
+sample_image = cp.asarray(sample_image).flatten() / 255
 
 Hf = H @ sample_image
-Hf_img = Hf.reshape(m, m)
+Hf_img = cp.asnumpy(Hf.reshape(m, m))
 Hf_img = np.clip(Hf_img, 0, 1)
 Hf_pil = Image.fromarray((Hf_img * 255).astype(np.uint8), mode="L")
 

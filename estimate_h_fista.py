@@ -20,7 +20,7 @@ N = n**2
 M = m**2
 LAMBDA = 100
 SEED = 5
-RATIO = 0.1
+RATIO = 0.05
 # DATA_PATH = "../../OneDrive - m.titech.ac.jp/Lab/data"
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
@@ -94,7 +94,7 @@ def fista(
     lmd: float,
     prox: Callable[[cp.ndarray, float], cp.ndarray],
     max_iter: int = 500,
-    tol: float = 1e-2,
+    tol: float = 1e-3,
 ) -> np.ndarray:
     """
     Solve the optimization problem using FISTA:
@@ -119,7 +119,7 @@ def fista(
     gamma = 1 / (4096 * 3)
     switched_to_sparse = False
     sparsity_threshold = 1e-6
-    switch_to_sparse_iter = 100
+    switch_to_sparse_iter = 20
 
     start = time.perf_counter()
     for i in range(max_iter):
@@ -184,8 +184,8 @@ h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l1)
 
 # %%
 H = h.reshape(g.shape[0] // K, N, order="F")
-np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
-print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
+# np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
+# print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 
 SAMPLE_NAME = "Cameraman"
 sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert("L")
@@ -201,4 +201,5 @@ fig, ax = plt.subplots(figsize=Hf_img.shape[::-1], dpi=1, tight_layout=True)
 ax.imshow(Hf_pil, cmap="gray")
 ax.axis("off")
 fig.savefig(f"{DIRECTORY}/{FILENAME}", dpi=1)
-plt.show()
+# plt.show()
+print(f"Saved {DIRECTORY}/{FILENAME}")

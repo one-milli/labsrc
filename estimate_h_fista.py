@@ -109,7 +109,7 @@ def fista(
     - h: numpy array, the solution vector h
     """
     t = 1
-    h = cp.ones(g.shape[0] / N, dtype=cp.float32)
+    h = cp.ones(g.shape[0] // N, dtype=cp.float32)
     h_old = cp.ones_like(h)
     y = cp.zeros_like(h)
     y_old = cp.zeros_like(y)
@@ -182,7 +182,7 @@ del F, G, H1, F_hat, G_hat
 h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l1)
 
 # %%
-H = h.reshape(G_hat.shape[0], N, order="F")
+H = h.reshape(g.shape[0] // N, N, order="F")
 np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
 print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 

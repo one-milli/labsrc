@@ -109,7 +109,7 @@ def fista(
     - h: numpy array, the solution vector h
     """
     t = 1
-    h = cp.ones(g.shape[0] // N, dtype=cp.float32)
+    h = cp.ones(g.shape[0] // X.shape[0], dtype=cp.float32)
     h_old = cp.ones_like(h)
     y = cp.zeros_like(h)
     y_old = cp.zeros_like(y)
@@ -162,7 +162,8 @@ def fista(
 INFO = "cap_240814"
 G, use = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", resize=True)
 F, _ = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/")
-print("K=", F.shape[1])
+K = F.shape[1]
+print("K=", K)
 white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")
 white_img = white_img.resize((m, m))
 white = np.asarray(white_img).flatten() / 255
@@ -182,7 +183,7 @@ del F, G, H1, F_hat, G_hat
 h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l1)
 
 # %%
-H = h.reshape(g.shape[0] // N, N, order="F")
+H = h.reshape(g.shape[0] // K, N, order="F")
 np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
 print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 

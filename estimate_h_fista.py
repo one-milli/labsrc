@@ -109,10 +109,10 @@ def fista(
     - h: numpy array, the solution vector h
     """
     t = 1
-    h = cp.ones(X.shape[1], dtype=cp.float32)
+    h = cp.ones(g.shape[0] / N, dtype=cp.float32)
     h_old = cp.ones_like(h)
-    y = cp.ones_like(h)
-    y_old = cp.ones_like(y)
+    y = cp.zeros_like(h)
+    y_old = cp.zeros_like(y)
 
     # Lipschitz constant
     # L = np.linalg.norm(X.T @ X, ord=2) * 3

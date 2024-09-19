@@ -1,17 +1,13 @@
 # %%
 import os
-import re
-import random
 import time
 from typing import Callable
 import cupy as cp
 import numpy as np
-import scipy as sp
-import scipy.sparse as sps
-import scipy.io as sio
 from cupyx.scipy import sparse as cps
 import matplotlib.pyplot as plt
 from PIL import Image
+import package.myUtil as myUtil
 
 # %%
 n = 128
@@ -19,7 +15,6 @@ m = 256
 N = n**2
 M = m**2
 LAMBDA = 100
-SEED = 5
 RATIO = 0.05
 # DATA_PATH = "../../OneDrive - m.titech.ac.jp/Lab/data"
 DATA_PATH = "../data"
@@ -39,39 +34,9 @@ def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
     return vector.reshape(s, t, order="F").astype(cp.float32)
 
 
-def mult_mass(X: cp.ndarray, h: cp.ndarray, M: int) -> cp.ndarray:
-    H_gpu = cp.asarray(h.reshape(M, -1, order="F"))
+def mult_mass(X: cp.ndarray, h: cp.ndarray) -> cp.ndarray:
+    H_gpu = cp.asarray(h.reshape(-1, X.shape[1], order="F"))
     return (H_gpu @ X.T).flatten(order="F")
-
-
-def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=RATIO, resize=False):
-    files = os.listdir(folder_path)
-    files.sort(key=lambda f: int(re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
-    if rand:
-        random.seed(SEED)
-        random.shuffle(files)
-
-    total_files = len(files)
-    number_of_files_to_load = int(total_files * ratio)
-    selected_files = files[:number_of_files_to_load]
-    selected_files.sort(key=lambda f: int(re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
-
-    images = []
-    use_list = []
-
-    for file in selected_files:
-        index = int(re.sub(r"\D", "", file))
-        use_list.append(index)
-        img = Image.open(os.path.join(folder_path, file))
-        if convert_gray:
-            img = img.convert("L")
-        if resize:
-            img = img.resize((m, m))
-        img_array = np.asarray(img).flatten()
-        img_array = img_array / 255
-        images.append(img_array)
-
-    return np.column_stack(images), use_list
 
 
 # %%
@@ -108,43 +73,32 @@ def fista(
     Returns:
     - h: numpy array, the solution vector h
     """
+    K = X.shape[0]
+    N = X.shape[1]
+    M = g.shape[0] // K
     t = 1
-    h = cp.ones((g.shape[0] // X.shape[0]) * N, dtype=cp.float32)
-    h_old = cp.ones_like(h)
+    h = cp.zeros((M * N, 1), dtype=cp.float32)
+    h_old = cp.zeros_like(h)
     y = cp.zeros_like(h)
-    y_old = cp.zeros_like(y)
+    # h = cps.csr_matrix((M * N, 1), dtype=cp.float32)
+    # h_old = cps.zeros_like(h)
+    # y = cps.zeros_like(h)
 
     # Lipschitz constant
     # L = np.linalg.norm(X.T @ X, ord=2) * 3
     gamma = 1 / (4096 * 3)
-    switched_to_sparse = False
-    sparsity_threshold = 1e-6
-    switch_to_sparse_iter = 20
 
     start = time.perf_counter()
     for i in range(max_iter):
         t_old = t
         h_old = h.copy()
-        y_old = y.copy()
 
+        h = prox(y - gamma * mult_mass(X.T, (mult_mass(X, y) - g)), gamma * lmd)
+        # 加速ステップ
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
-        h = prox(y_old - gamma * mult_mass(X.T, (mult_mass(X, y_old, M) - g), M), gamma * lmd)
-        h = cp.where(cp.abs(h) < sparsity_threshold, 0, h)
-        if not switched_to_sparse and i >= switch_to_sparse_iter:
-            sparsity_level = cp.count_nonzero(h) / h.size
-            if sparsity_level < 0.1:
-                h = cps.csr_matrix(h)
-                h_old = cps.csr_matrix(h_old)
-                y = cps.csr_matrix(y)
-                y_old = cps.csr_matrix(y_old)
-                switched_to_sparse = True
-                print(f"Iteration {i}: Switched to sparse representation.")
         y = h + (t_old - 1) / t * (h - h_old)
 
-        if switched_to_sparse:
-            error = cp.linalg.norm((y - y_old).toarray()) / cp.linalg.norm(y.toarray())
-        else:
-            error = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
+        error = cp.linalg.norm((h - h_old).toarray()) / cp.linalg.norm(h.toarray())
 
         print(f"iter: {i}, error: {error}")
         if error < tol:
@@ -152,8 +106,6 @@ def fista(
 
     end = time.perf_counter()
     print(f"Elapsed time: {end-start}")
-    if switched_to_sparse:
-        h = h.toarray().flatten()
 
     return cp.asnumpy(y)
 
@@ -161,8 +113,8 @@ def fista(
 # %%
 # load images
 INFO = "cap_240814"
-G, use = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", resize=True)
-F, _ = images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/")
+G, _ = myUtil.images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", ratio=RATIO)
+F, _ = myUtil.images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/", ratio=RATIO)
 K = F.shape[1]
 print("K=", K)
 white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")

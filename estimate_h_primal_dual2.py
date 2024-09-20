@@ -177,8 +177,8 @@ def primal_dual_splitting(
     y[:] = 1e-2
     y_old[:] = 0
 
-    tau = 1e-4
-    sigma = 1e0
+    tau = 1e-5
+    sigma = 1e-1
     print(f"tau={tau}, sigma={sigma}")
 
     for k in range(max_iter):
@@ -193,18 +193,15 @@ def primal_dual_splitting(
         y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dijkl(2 * h - h_old), sigma * lambda2)
 
         if k % 10 == 9:
-            primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
-            norm_diff_y = cp.linalg.norm(y - y_old)
-            norm_y = cp.linalg.norm(y)
-            print(f"norm_diff_y={norm_diff_y:.8e}, norm_y={norm_y:.8e}")
-            dual_residual = norm_diff_y / norm_y if norm_y > 1e-9 else norm_diff_y
+            primal_residual = cp.linalg.norm(h - h_old)
+            dual_residual = cp.linalg.norm(y - y_old)
             print(f"iter={k}, primal_res={primal_residual:.8e}, dual_res={dual_residual:.8e}")
             if cp.isnan(primal_residual) or cp.isnan(dual_residual):
                 print("NaN detected in residuals, stopping optimization.")
                 break
-            if primal_residual < 1e-3 and dual_residual < 1e-3:
-                print("Convergence criteria met.")
-                break
+            # if primal_residual < 1e-3 and dual_residual < 1e-3:
+            #     print("Convergence criteria met.")
+            #     break
         else:
             print(f"iter={k}")
 
@@ -212,8 +209,8 @@ def primal_dual_splitting(
             print("2nd", calculate_2nd_term(h.reshape(M, N, order="F")))
             print("3rd", calculate_3rd_term(h))
 
-    primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
-    dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
+    primal_residual = cp.linalg.norm(h - h_old)
+    dual_residual = cp.linalg.norm(y - y_old)
     print(f"Final iteration {k+1}, primal_res={primal_residual:.8e}, dual_res={dual_residual:.8e}")
     print_memory_usage("After optimization")
 

@@ -177,8 +177,8 @@ def primal_dual_splitting(
     y[:] = 1e-2
     y_old[:] = 0
 
-    tau = 1e-5
-    sigma = 1e-1
+    tau = 1e-4
+    sigma = 1e0
     print(f"tau={tau}, sigma={sigma}")
 
     for k in range(max_iter):
@@ -194,7 +194,10 @@ def primal_dual_splitting(
 
         if k % 10 == 9:
             primal_residual = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
-            dual_residual = cp.linalg.norm(y - y_old) / cp.linalg.norm(y)
+            norm_diff_y = cp.linalg.norm(y - y_old)
+            norm_y = cp.linalg.norm(y)
+            print(f"norm_diff_y={norm_diff_y:.8e}, norm_y={norm_y:.8e}")
+            dual_residual = norm_diff_y / norm_y if norm_y > 1e-9 else norm_diff_y
             print(f"iter={k}, primal_res={primal_residual:.8e}, dual_res={dual_residual:.8e}")
             if cp.isnan(primal_residual) or cp.isnan(dual_residual):
                 print("NaN detected in residuals, stopping optimization.")
@@ -255,6 +258,7 @@ white = white[:, np.newaxis]
 H1 = np.tile(white, F.shape[1])
 F_hat = 2 * F - 1
 G_hat = 2 * G - H1
+M = G_hat.shape[0]
 # G_hat = myUtil.delete_pixels(G_hat, indices)
 
 G_vec = G_hat.ravel(order="F")
@@ -271,7 +275,7 @@ del F, G, H1, F_hat, G_hat
 h, info = primal_dual_splitting(F_hat_T_gpu, g_gpu, LAMBDA1, LAMBDA2)
 
 # %%
-H = h.reshape(G_hat.shape[0], N, order="F")
+H = h.reshape(M, N, order="F")
 # np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
 # print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 

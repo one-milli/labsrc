@@ -177,7 +177,7 @@ def primal_dual_splitting(
     y[:] = 1e-2
     y_old[:] = 0
 
-    tau = 1e-4
+    tau = 1e-5
     sigma = 1e-1
     print(f"tau={tau}, sigma={sigma}")
 
@@ -186,7 +186,7 @@ def primal_dual_splitting(
         y_old[:] = y[:]
 
         h[:] = prox_l122(
-            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old) - g)) - mult_DijklT(y_old)),
+            h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old) - g)) + mult_DijklT(y_old)),
             tau * lambda1,
         )
 

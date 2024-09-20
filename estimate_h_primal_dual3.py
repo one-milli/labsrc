@@ -135,7 +135,7 @@ def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
 def prox_tv(y: cp.ndarray, gamma: float) -> cp.ndarray:
     y_norm = cp.linalg.norm(y.reshape(-1, 2, order="F"), axis=1, keepdims=True)
     scaling = cp.maximum(1 - gamma / y_norm, 0)
-    return (y * scaling).ravel(order="F")
+    return y * scaling
 
 
 def prox_conj(prox: Callable[[cp.ndarray, float], cp.ndarray], x: cp.ndarray, gamma: float) -> cp.ndarray:

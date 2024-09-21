@@ -172,10 +172,11 @@ def primal_dual_splitting(
 
         h[:] = prox_l122(
             h_old - tau * (mult_mass(X.T, (mult_mass(X, h_old) - g)) + mult_DijT(y_old)),
-            tau * lambda1,
+            lambda1 * tau,
         )
 
-        y[:] = prox_conj(prox_tv, y_old + sigma * mult_Dij(2 * h - h_old), sigma * lambda2)
+        y[:] = y_old + sigma * mult_Dij(2 * h - h_old)
+        y[:] = y - sigma * prox_conj(prox_tv, y / sigma, lambda2 / sigma)
 
         if k % 10 == 9:
             primal_residual = cp.linalg.norm(h - h_old)

@@ -1,7 +1,7 @@
 # %% [markdown]
 # ## 最適化問題
 #
-# $$ \min*h \|\bm{g}-F^\top \bm{h}\|\_2^2+\lambda_1\|\bm{h}\|*{1,2}^2 + \lambda*2\|D\bm{h}\|*{1,2}$$
+# $$ \min_h \|\bm{g}-F^\top \bm{h}\|_2^2+\lambda_1\|\bm{h}\|_{1,2}^2 + \lambda_2\|D\bm{h}\|_{1,2}$$
 #
 
 # %%
@@ -133,14 +133,14 @@ def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
 
 
 def prox_tv(y: cp.ndarray, gamma: float) -> cp.ndarray:
-    y_norm = cp.linalg.norm(y.reshape(-1, 2, order="F"), axis=1, keepdims=True)
-    scaling = cp.maximum(1 - gamma / y_norm, 0)
-    return y * scaling
+    l2 = cp.linalg.norm(y.reshape(-1, 2, order="F"), axis=1, keepdims=True)
+    l2 = cp.maximum(1 - gamma / (l2 + 1e-16), 0)
+    return (l2 * y.reshape(-1, 2, order="F")).ravel(order="F")
 
 
-def prox_conj(prox: Callable[[cp.ndarray, float], cp.ndarray], x: cp.ndarray, gamma: float) -> cp.ndarray:
+def prox_conj(prox: Callable[[cp.ndarray, float], cp.ndarray], y: cp.ndarray, gamma: float) -> cp.ndarray:
     """Conjugate proximal operator."""
-    return x - gamma * prox(x / gamma, 1 / gamma)
+    return y - gamma * prox(y / gamma, 1 / gamma)
 
 
 def primal_dual_splitting(

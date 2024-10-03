@@ -1,8 +1,8 @@
 # %% [markdown]
 # ## 最適化問題
-# 
+#
 # $$ \min_h \frac{1}{2}\|\bm{g}-(I\otimes F^\top) \bm{h}\|_2^2+\lambda_1\|\bm{h}\|_{1,2}^2 + \lambda_2\|D\bm{h}\|_{1,2}$$
-# 
+#
 
 # %%
 import os
@@ -35,6 +35,8 @@ if not os.path.exists(DIRECTORY + "/systemMatrix"):
     os.makedirs(DIRECTORY + "/systemMatrix")
 
 # %%
+
+
 def print_memory_usage(message):
     mempool = cp.get_default_memory_pool()
     used_bytes = mempool.used_bytes()
@@ -42,6 +44,8 @@ def print_memory_usage(message):
     print(f"{message}: Used memory: {used_bytes / 1024**3:.2f} GB, Total memory: {total_bytes / 1024**3:.2f} GB")
 
 # %%
+
+
 def compute_Dh(h):
     tensor = h.reshape((n, n, m, m), order='F')
 
@@ -97,6 +101,8 @@ def compute_Dt_y(y):
     return h
 
 # %%
+
+
 def calculate_1st_term(Gt, Ft, Ht):
     print("calculate_1st_term start")
     return cp.linalg.norm(Gt - Ft @ Ht) ** 2
@@ -117,11 +123,14 @@ def calculate_3rd_term(h):
     return tv
 
 # %%
+
+
 def prox_l122(Ht: cp.ndarray, gamma: float) -> cp.ndarray:
     l1_norms = cp.sum(cp.absolute(Ht), axis=1)
     factor = (2 * gamma) / (1 + 2 * gamma * N)
     X = cp.zeros_like(Ht)
-    X = cp.sign(Ht) * cp.maximum(cp.absolute(Ht) - factor * l1_norms[:, None], 0)
+    X = cp.sign(Ht) * cp.maximum(cp.absolute(Ht) -
+                                 factor * l1_norms[:, None], 0)
     return X
 
 
@@ -163,16 +172,19 @@ def primal_dual_splitting(
         y_old[:] = y[:]
 
         Ht[:] = prox_l122(
-            Ht_old - tau * (Ft.T @ (Ft @ Ht - Gt) + (compute_Dt_y(y_old)).reshape(N, M, order="F")),
+            Ht_old - tau * (Ft.T @ (Ft @ Ht - Gt) +
+                            (compute_Dt_y(y_old)).reshape(N, M, order="F")),
             lambda1 * tau,
         )
 
-        y[:] = prox_conj(y_old + sigma * compute_Dh((2 * Ht - Ht_old).ravel(order="F")), prox_tv, lambda2 / sigma)
+        y[:] = prox_conj(y_old + sigma * compute_Dh((2 * Ht -
+                         Ht_old).ravel(order="F")), prox_tv, lambda2 / sigma)
 
         if k % 100 == 99:
             primal_residual = cp.linalg.norm(Ht - Ht_old)
             dual_residual = cp.linalg.norm(y - y_old)
-            print(f"iter={k}, primal_res={primal_residual:.8e}, dual_res={dual_residual:.8e}")
+            print(
+                f"iter={k}, primal_res={primal_residual:.8e}, dual_res={dual_residual:.8e}")
             print("1st", calculate_1st_term(Gt, Ft, Ht))
             print("2nd", calculate_2nd_term(Ht))
             print("3rd", calculate_3rd_term(Ht))
@@ -187,7 +199,8 @@ def primal_dual_splitting(
 
     primal_residual = cp.linalg.norm(Ht - Ht_old)
     dual_residual = cp.linalg.norm(y - y_old)
-    print(f"Final iteration {k+1}, primal_res={primal_residual:.8e}, dual_res={dual_residual:.8e}")
+    print(
+        f"Final iteration {k+1}, primal_res={primal_residual:.8e}, dual_res={dual_residual:.8e}")
     print_memory_usage("After optimization")
 
     info = {
@@ -217,30 +230,33 @@ def primal_dual_splitting(
 
 # myUtil.create_heatmap(image_array, threshold_value)
 
+
 # %%
 # load images
 INFO = "cap_240814"
-G, _ = myUtil.images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", ratio=RATIO, resize=True, ressize=m)
-F, _ = myUtil.images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/", ratio=RATIO)
+G, _ = myUtil.images_to_matrix(
+    f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", ratio=RATIO, resize=True, ressize=m)
+F, _ = myUtil.images_to_matrix(
+    f"{DATA_PATH}/{IMG_NAME}{n}_input/", ratio=RATIO)
 print("K=", F.shape[1])
-white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")
+white_img = Image.open(
+    f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")
 white_img = white_img.resize((m, m))
 white = np.asarray(white_img).ravel() / 255
 white = white[:, np.newaxis]
 H1 = np.tile(white, F.shape[1])
 F_hat = 2 * F - 1
 G_hat = 2 * G - H1
-M = G_hat.shape[0]
+# M = G_hat.shape[0]
 # G_hat = myUtil.delete_pixels(G_hat, indices)
-
-G_vec = G_hat.ravel(order="F")
+# G_vec = G_hat.ravel(order="F")
 
 # %%
 F_hat_T_gpu = cp.asarray(F_hat.T).astype(cp.int8)
-g_gpu = cp.asarray(G_vec).astype(cp.float16)
+G_hat_T_gpu = cp.asarray(G_hat.T).astype(cp.float32)
 
 print(f"F device: {F_hat_T_gpu.device}")
-print(f"g device: {g_gpu.device}")
+print(f"g device: {G_hat_T_gpu.device}")
 del F, G, H1, F_hat, G_hat
 
 # %%
@@ -252,7 +268,8 @@ H = h.reshape(M, N, order="F")
 # print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 
 SAMPLE_NAME = "Cameraman"
-sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert('L')
+sample_image = Image.open(
+    f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert('L')
 sample_image = cp.asarray(sample_image).ravel() / 255
 
 Hf = H @ sample_image
@@ -267,5 +284,3 @@ ax.axis('off')
 fig.savefig(f"{DIRECTORY}/{FILENAME}", dpi=1)
 # plt.show()
 print(f"Saved {DIRECTORY}/{FILENAME}")
-
-

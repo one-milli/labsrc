@@ -73,7 +73,7 @@ def fista(
     gamma = 1 / (N * 3)
     # H_true = cp.load(f"{DIRECTORY}/systemMatrix/H_matrix_hadamard_gf.npy")
 
-    start = time.perf_counter()
+    # start = time.perf_counter()
     for i in range(max_iter):
         t_old = t
         Ht_old = Ht.copy()
@@ -86,19 +86,16 @@ def fista(
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
         Yt = Ht + ((t_old - 1) / t) * (Ht - Ht_old)
 
-        if i % 100 == 99:
-            error = cp.linalg.norm(Ht - Ht_old) / cp.linalg.norm(Ht)
-            # error = cps.linalg.norm(Ht - Ht_old) / cps.linalg.norm(Ht)
-            print(f"iter: {i}, error: {error}")
-            # rem = cp.linalg.norm(Ht - H_true.T)
-            # print(f"iter: {i}, error: {error}, rem: {rem}")
-            if error < tol:
-                break
-        else:
-            print(f"iter: {i}")
+        error = cp.linalg.norm(Ht - Ht_old) / cp.linalg.norm(Ht)
+        # error = cps.linalg.norm(Ht - Ht_old) / cps.linalg.norm(Ht)
+        print(f"iter: {i}, error: {error}")
+        # rem = cp.linalg.norm(Ht - H_true.T)
+        # print(f"iter: {i}, error: {error}, rem: {rem}")
+        if error < tol:
+            break
 
-    end = time.perf_counter()
-    print(f"Elapsed time: {end-start}")
+    # end = time.perf_counter()
+    # print(f"Elapsed time: {end-start}")
 
     return Ht
 

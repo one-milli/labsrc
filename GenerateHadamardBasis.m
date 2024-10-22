@@ -22,7 +22,7 @@ for vidx = 0:m - 1
         axis off;
 %}
 
-        imwrite(F, ['../../OneDrive - m.titech.ac.jp/Lab/data/Hadamard', int2str(m), '_input/hadamard_', int2str(n), '.png'])
+        imwrite(F, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(m), '_input/hadamard_', int2str(n), '.png'])
         n = n + 1;
     end
 

@@ -6,7 +6,7 @@ from PIL import Image, ImageFilter
 import matplotlib.pyplot as plt
 
 
-def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=0.05, resize=False, ressize=256):
+def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=1.0, resize=False, ressize=256):
     SEED = 5
     IMG_NAME = "hadamard"
     files = os.listdir(folder_path)

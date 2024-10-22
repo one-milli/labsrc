@@ -11,17 +11,17 @@ import package.myUtil as myUtil
 
 # %%
 n = 128
-m = 256
+m = 128
 N = n**2
 M = m**2
-LAMBDA = 100
+LAMBDA = 1
 RATIO = 0.05
 # DATA_PATH = "../../OneDrive - m.titech.ac.jp/Lab/data"
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
-DIRECTORY = DATA_PATH + "/240825"
-REG = "l122"
-SETTING = f"{IMG_NAME}_FISTA_{REG}_p-{int(100*RATIO)}_lmd-{LAMBDA}"
+DIRECTORY = DATA_PATH + "/241022"
+REG = ""
+SETTING = f"{IMG_NAME}_FISTA_{REG}p-{int(100*RATIO)}_lmd-{LAMBDA}_m-{m}"
 
 if not os.path.exists(DIRECTORY):
     os.makedirs(DIRECTORY)
@@ -35,8 +35,7 @@ def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
 
 
 def mult_mass(X: cp.ndarray, h: cp.ndarray) -> cp.ndarray:
-    H_gpu = cp.asarray(h.reshape(-1, X.shape[1], order="F"))
-    return (H_gpu @ X.T).flatten(order="F")
+    return (h.reshape(-1, X.shape[1], order="F") @ X.T).ravel(order="F")
 
 
 # %%
@@ -54,7 +53,7 @@ def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
 
 
 def fista(
-    X: cp.ndarray,
+    Ft: cp.ndarray,
     g: cp.ndarray,
     lmd: float,
     prox: Callable[[cp.ndarray, float], cp.ndarray],
@@ -66,15 +65,15 @@ def fista(
     min_h ||g - Xh||_2^2 + lambda * ||h||_1
 
     Parameters:
-    - X: numpy array, the matrix X
+    - Ft: numpy array, the matrix Ft
     - g: numpy array, the vector g
     - lmd: float, the regularization parameter
 
     Returns:
     - h: numpy array, the solution vector h
     """
-    K = X.shape[0]
-    N = X.shape[1]
+    K = Ft.shape[0]
+    N = Ft.shape[1]
     M = g.shape[0] // K
     t = 1
     h = cp.zeros(M * N, dtype=cp.float32)
@@ -85,7 +84,7 @@ def fista(
     # y = cps.zeros_like(h)
 
     # Lipschitz constant
-    # L = np.linalg.norm(X.T @ X, ord=2) * 3
+    # L = np.linalg.norm(Ft.T @ Ft, ord=2) * 3
     gamma = 1 / (4096 * 3)
 
     start = time.perf_counter()
@@ -93,7 +92,7 @@ def fista(
         t_old = t
         h_old = h.copy()
 
-        h = prox(y - gamma * mult_mass(X.T, (mult_mass(X, y) - g)), gamma * lmd)
+        h = prox(y - gamma * mult_mass(Ft.T, (mult_mass(Ft, y) - g)), gamma * lmd)
         # 加速ステップ
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
         y = h + (t_old - 1) / t * (h - h_old)
@@ -112,14 +111,15 @@ def fista(
 
 # %%
 # load images
+# INFO = "cap_R_230516_128"
 INFO = "cap_240814"
-G, _ = myUtil.images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", ratio=RATIO)
+G, _ = myUtil.images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/", ratio=RATIO, resize=True, ressize=m)
 F, _ = myUtil.images_to_matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/", ratio=RATIO)
 K = F.shape[1]
 print("K=", K)
 white_img = Image.open(f"{DATA_PATH}/{IMG_NAME}{n}_{INFO}/{IMG_NAME}_1.png").convert("L")
 white_img = white_img.resize((m, m))
-white = np.asarray(white_img).flatten() / 255
+white = np.asarray(white_img).ravel() / 255
 white = white[:, np.newaxis]
 H1 = np.tile(white, F.shape[1])
 F_hat = 2 * F - 1

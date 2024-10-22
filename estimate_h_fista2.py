@@ -32,7 +32,9 @@ if not os.path.exists(DIRECTORY + "/systemMatrix"):
 def prox_l122(Y: cp.ndarray, gamma: float) -> cps.csr_matrix:
     l1_norms = cp.sum(cp.absolute(Y), axis=1)
     factor = (2 * gamma) / (1 + 2 * gamma * N)
-    return cps.csr_matrix(cp.sign(Y) * cp.maximum(cp.absolute(Y) - factor * l1_norms[:, None], 0))
+    X = cp.sign(Y) * cp.maximum(cp.absolute(Y) - factor * l1_norms[:, None], 0)
+    # return cps.csr_matrix(X)
+    return X
 
 
 def fista(
@@ -58,34 +60,35 @@ def fista(
     N = Ft.shape[1]
     M = Gt.shape[1]
     t = 1
-    # Ht = cp.zeros((N, M), dtype=cp.float32)
-    # Ht_old = cp.zeros_like(Ht)
-    # Yt = cp.zeros_like(Ht)
-    Ht = cps.csr_matrix((N, M), dtype=cp.float32)
-    Ht_old = cps.csr_matrix((N, M), dtype=cp.float32)
-    Yt = cps.csr_matrix((N, M), dtype=cp.float32)
+    Ht = cp.zeros((N, M), dtype=cp.float32)
+    Ht_old = cp.zeros_like(Ht)
+    Yt = cp.zeros_like(Ht)
+    # Ht = cps.csr_matrix((N, M), dtype=cp.float32)
+    # Ht_old = cps.csr_matrix((N, M), dtype=cp.float32)
+    # Yt = cps.csr_matrix((N, M), dtype=cp.float32)
+    ff = Ft.T @ Ft
 
     # Lipschitz constant
     # L = np.linalg.norm(Ft.T @ Ft, ord=2) * 3
-    gamma = 1 / (4096 * 3)
+    gamma = 1 / (N * 3)
     # H_true = cp.load(f"{DIRECTORY}/systemMatrix/H_matrix_hadamard_gf.npy")
-    ff = Ft.T @ Ft
 
     start = time.perf_counter()
     for i in range(max_iter):
         t_old = t
         Ht_old = Ht.copy()
 
-        # A_nonsparse = Yt - gamma * Ft.T @ (Ft @ Ht - Gt)
-        A_nonsparse = ff @ Ht
-        A_nonsparse = Yt - gamma * A_nonsparse
-        A_nonsparse = A_nonsparse - Ft.T @ Gt
-        Ht = prox(A_nonsparse, gamma * lmd)
+        # A_nonsparse = ff @ Ht
+        # A_nonsparse = Yt - gamma * A_nonsparse
+        # A_nonsparse = A_nonsparse - Ft.T @ Gt
+        # Ht = prox(A_nonsparse, gamma * lmd)
+        Ht = prox(Yt - gamma * ff @ Ht - Ft.T @ Gt, gamma * lmd)
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
         Yt = Ht + ((t_old - 1) / t) * (Ht - Ht_old)
 
         if i % 100 == 99:
-            error = cps.linalg.norm(Ht - Ht_old) / cps.linalg.norm(Ht)
+            error = cp.linalg.norm(Ht - Ht_old) / cp.linalg.norm(Ht)
+            # error = cps.linalg.norm(Ht - Ht_old) / cps.linalg.norm(Ht)
             print(f"iter: {i}, error: {error}")
             # rem = cp.linalg.norm(Ht - H_true.T)
             # print(f"iter: {i}, error: {error}, rem: {rem}")

@@ -16,8 +16,8 @@ N = n**2
 M = m**2
 LAMBDA = 1
 RATIO = 0.05
-DATA_PATH = "../../OneDrive - m.titech.ac.jp/Lab/data"
-# DATA_PATH = "../data"
+# DATA_PATH = "../../OneDrive - m.titech.ac.jp/Lab/data"
+DATA_PATH = "../data"
 IMG_NAME = "hadamard"
 DIRECTORY = DATA_PATH + "/241022"
 SETTING = f"{IMG_NAME}_FISTA_p-{int(100*RATIO)}_lmd-{LAMBDA}_m-{m}"
@@ -80,7 +80,7 @@ def fista(
         A_nonsparse = ff @ Ht
         A_nonsparse = Yt - gamma * A_nonsparse
         A_nonsparse = A_nonsparse - Ft.T @ Gt
-        Ht = cps.csr_matrix(prox(A_nonsparse, gamma * lmd))
+        Ht = prox(A_nonsparse, gamma * lmd)
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
         Yt = Ht + ((t_old - 1) / t) * (Ht - Ht_old)
 

@@ -9,7 +9,7 @@ import admm_csp
 # DATA_PATH = '../../../OneDrive - m.titech.ac.jp/Lab/data'
 DATA_PATH = "../data"
 OBJ_NAME = "Cameraman"
-H_SETTING = "hadamard_FISTA_l122_p-5_lmd-100"
+H_SETTING = "hadamard_FISTA_p-5_lmd-1_m-256"
 # H_SETTING = "gf"
 n = 128
 m = 256
@@ -56,8 +56,9 @@ captured = np.array(captured)
 g = captured.reshape(-1, 1)
 
 # %%
-H = np.load(f"{DATA_PATH}/240825/systemMatrix/H_matrix_{H_SETTING}.npy")
+H = np.load(f"{DATA_PATH}/241022/systemMatrix/H_matrix_{H_SETTING}.npy")
 print("H shape:", H.shape, "type(H):", type(H), "H.dtype:", H.dtype)
+print(f"nonzero {np.count_nonzero(H)}")
 # H[abs(H) < 1e-3] = 0
 
 # %%
@@ -73,6 +74,6 @@ F_image = Image.fromarray(F)
 mu1 = np.log10(admm.mu1)
 mu2 = np.log10(admm.mu2)
 mu3 = np.log10(admm.mu3)
-SAVE_PATH = f"{DATA_PATH}/240825/reconst/{OBJ_NAME}_{H_SETTING}_admm_t-{tau}_m{mu1}m{mu2}m{mu3}.png"
+SAVE_PATH = f"{DATA_PATH}/241022/reconst/{OBJ_NAME}_{H_SETTING}_admm_t-{tau}_m{mu1}m{mu2}m{mu3}.png"
 F_image.save(SAVE_PATH)
 print(SAVE_PATH)

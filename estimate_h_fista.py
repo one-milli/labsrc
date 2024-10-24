@@ -137,8 +137,8 @@ h = fista(F_hat_T_gpu, g_gpu, LAMBDA, prox_l122)
 
 # %%
 H = h.reshape(g.shape[0] // K, N, order="F")  # cupy
-# np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
-# print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
+np.save(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy", H)
+print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npy")
 
 SAMPLE_NAME = "Cameraman"
 sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert("L")

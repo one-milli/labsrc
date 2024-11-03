@@ -6,7 +6,7 @@ from PIL import Image, ImageFilter
 import matplotlib.pyplot as plt
 
 
-def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=1.0, resize=False, ressize=256):
+def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=1.0, resize=False, ressize=255, thin_out=False):
     SEED = 5
     IMG_NAME = "hadamard"
     files = os.listdir(folder_path)
@@ -23,14 +23,20 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=1.0, resiz
     images = []
     use_list = []
 
-    for file in selected_files:
+    # for file in selected_files:
+    for i, file in enumerate(selected_files):
         index = int(re.sub(r"\D", "", file))
         use_list.append(index)
         img = Image.open(os.path.join(folder_path, file))
+        if i == 0:
+            print(f"dtype: {np.array(img).dtype}")
         if convert_gray:
             img = img.convert("L")
         if resize:
-            img = img.resize((ressize, ressize))
+            img = img.resize((ressize, ressize), Image.Resampling.BICUBIC)
+        if thin_out:
+            img_array = np.asarray(img)
+            img_array = img_array[::2, ::2]
         img_array = np.asarray(img).flatten()
         img_array = img_array / 255
         images.append(img_array)

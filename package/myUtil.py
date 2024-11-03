@@ -37,6 +37,7 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=1.0, resiz
         if thin_out:
             img_array = np.asarray(img)
             img_array = img_array[::2, ::2]
+            img = Image.fromarray(img_array)
         img_array = np.asarray(img).flatten()
         img_array = img_array / 255
         images.append(img_array)

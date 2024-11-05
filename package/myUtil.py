@@ -2,6 +2,7 @@ import os
 import re
 import random
 import numpy as np
+import cupy as cp
 from PIL import Image, ImageFilter
 import matplotlib.pyplot as plt
 
@@ -35,14 +36,14 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=1.0, resiz
         if resize:
             img = img.resize((ressize, ressize), Image.Resampling.BICUBIC)
         if thin_out:
-            img_array = np.asarray(img)
+            img_array = cp.asarray(img)
             img_array = img_array[::2, ::2]
             img = Image.fromarray(img_array)
-        img_array = np.asarray(img).flatten()
+        img_array = cp.asarray(img).flatten()
         img_array = img_array / 255
         images.append(img_array)
 
-    return np.column_stack(images), use_list
+    return cp.column_stack(images), use_list
 
 
 def find_low_pixel_indices(image_path, threshold, apply_noise_reduction=False, blur_radius=2):

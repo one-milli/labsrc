@@ -68,8 +68,8 @@ function params = defineParameters()
     end
 
     % Ensure capture directory exists
-    if ~exist(params.capturePath, 'dir')
-        mkdir(params.capturePath);
+    if ~exist(params.paths.capturePath, 'dir')
+        mkdir(params.paths.capturePath);
     end
 
 end

@@ -55,7 +55,7 @@ function params = defineParameters()
 
     % File paths
     basePath = '../../OneDrive - m.titech.ac.jp/Lab/data/';
-    params.paths.hadamardInput = fullfile(basePath, ['Hadamard', num2str(params.n), '_input']);
+    params.paths.hadamardInput = fullfile(basePath, ['hadamard', num2str(params.n), '_input']);
     params.paths.captureWhite = fullfile(basePath, ['capture_', params.expDate]);
     params.paths.hadamardCap = fullfile(basePath, ['hadamard', num2str(params.n), '_cap_', params.expDate]);
 

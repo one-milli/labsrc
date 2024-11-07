@@ -5,6 +5,7 @@ function params = defineParameters()
     params.expDate = '241107';
 
     % Trimming parameters
+    % Image shape: (trimRowTo - trimRowFrom + 1) x (trimColTo - trimColFrom + 1)
     params.trimRowFrom = 351;
     params.trimRowTo = 850;
     params.trimColFrom = 351;

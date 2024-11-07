@@ -3,7 +3,6 @@ function processedImg = processCapturedImage(capturedImg, params)
     try
         trimmedImg = capturedImg(params.trimRowFrom:params.trimRowTo, ...
             params.trimColFrom:params.trimColTo);
-        disp(size(trimmedImg));
         processedImg = uint8(imresize(trimmedImg, [params.m, params.m]));
     catch ME
         error('Error processing captured image: %s', ME.message);

@@ -60,7 +60,7 @@ function params = defineParameters()
 
     params.filename = 'Cameraman';
     params.sampleImagePath = [basePath, 'sample_image', num2str(params.n), '/'];
-    params.capturePath = [basePath, 'capture_', params.expDate];
+    params.paths.capturePath = [basePath, 'capture_', params.expDate];
 
     % Create directories if they do not exist
     if ~exist(params.paths.hadamardCap, 'dir')

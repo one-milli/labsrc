@@ -1,7 +1,7 @@
 %% Simulate the capture of the patterns and their use for binary search
 imaqreset
 
-expDate = '240814';
+expDate = '241107';
 trimRowFrom = 351;
 trimRowTo = 850;
 trimColFrom = 371;

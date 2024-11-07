@@ -26,7 +26,7 @@ cleanupCamera(camera);
 function captureWhiteImage(params, camera, ha)
     % Capture and save the white image
     if params.sta == 1
-        whiteImagePath = fullfile(params.paths.hadamardInput, 'hadamard1.png');
+        whiteImagePath = fullfile(params.paths.hadamardInput, 'hadamard_1.png');
         inputImage = readAndResizeImage(whiteImagePath, params.n);
 
         % Create display line for white image
@@ -41,7 +41,7 @@ function captureWhiteImage(params, camera, ha)
         capturedImg = getdata(camera.vid, 1);
 
         % Save captured white image
-        saveImage(capturedImg, fullfile(params.paths.captureWhite, 'capturewhite.png'));
+        saveImage(capturedImg, fullfile(params.paths.capturePath, 'capturewhite.png'));
     end
 
 end
@@ -59,7 +59,7 @@ function captureHadamardPatterns(params, camera, ha)
         for k = 1:currentChunkSize
             patternIndex = chunkStart + k - 1;
             patternPath = fullfile(params.paths.hadamardInput, ...
-                ['hadamard', num2str(patternIndex), '.png']);
+                ['hadamard_', num2str(patternIndex), '.png']);
             hadamardChunk(:, :, k) = readAndResizeImage(patternPath, params.n);
         end
 

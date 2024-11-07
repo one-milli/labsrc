@@ -56,7 +56,6 @@ function params = defineParameters()
     % File paths
     basePath = '../../OneDrive - m.titech.ac.jp/Lab/data/';
     params.paths.hadamardInput = fullfile(basePath, ['hadamard', num2str(params.n), '_input']);
-    params.paths.captureWhite = fullfile(basePath, ['capture_', params.expDate]);
     params.paths.hadamardCap = fullfile(basePath, ['hadamard', num2str(params.n), '_cap_', params.expDate]);
 
     params.filename = 'Cameraman';
@@ -64,10 +63,6 @@ function params = defineParameters()
     params.capturePath = [basePath, 'capture_', params.expDate];
 
     % Create directories if they do not exist
-    if ~exist(params.paths.captureWhite, 'dir')
-        mkdir(params.paths.captureWhite);
-    end
-
     if ~exist(params.paths.hadamardCap, 'dir')
         mkdir(params.paths.hadamardCap);
     end

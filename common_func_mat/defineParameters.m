@@ -46,10 +46,31 @@ function params = defineParameters()
     params.camera.upperLeftColumn = 500;
     params.camera.upperLeftRow = 750;
 
-    % Image display and capture settings
+    % Capture range
+    params.sta = 1;
+    params.fin = params.nn;
+
+    % Capture settings
+    params.chunkSize = 64;
+
+    % File paths
+    basePath = '../../OneDrive - m.titech.ac.jp/Lab/data/';
+    params.paths.hadamardInput = fullfile(basePath, ['Hadamard', num2str(params.n), '_input']);
+    params.paths.captureWhite = fullfile(basePath, ['capture_', params.expDate]);
+    params.paths.hadamardCap = fullfile(basePath, ['hadamard', num2str(params.n), '_cap_', params.expDate]);
+
     params.filename = 'Cameraman';
-    params.sampleImagePath = ['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image', num2str(params.n), '/'];
-    params.capturePath = ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', params.expDate];
+    params.sampleImagePath = [basePath, 'sample_image', num2str(params.n), '/'];
+    params.capturePath = [basePath, 'capture_', params.expDate];
+
+    % Create directories if they do not exist
+    if ~exist(params.paths.captureWhite, 'dir')
+        mkdir(params.paths.captureWhite);
+    end
+
+    if ~exist(params.paths.hadamardCap, 'dir')
+        mkdir(params.paths.hadamardCap);
+    end
 
     % Ensure capture directory exists
     if ~exist(params.capturePath, 'dir')

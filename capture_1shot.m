@@ -7,20 +7,20 @@ initializeImageAcquisition();
 params = defineParameters();
 
 % Initialize Figure for Display
-figureHandle = initializeFigure(params.rectPro);
+[hFig, ha] = initializeFigure(params.rectPro);
 
 % Setup Camera
 camera = setupCamera(params);
 
 % Capture Snapshot Image
-captureSnapshot(params, camera, figureHandle);
+captureSnapshot(params, camera, ha);
 
 % Cleanup Camera
 cleanupCamera(camera);
 
 %% Function Definitions
 
-function captureSnapshot(params, camera, figureHandle)
+function captureSnapshot(params, camera, ha)
     % Capture and save a snapshot using a sample image
 
     % Read and resize the sample image
@@ -32,7 +32,7 @@ function captureSnapshot(params, camera, figureHandle)
 
     % Display the image on the projector
     disp('Displaying snapshot image...');
-    imshow(uint8(lineImage), 'Parent', figureHandle);
+    imshow(uint8(lineImage), 'Parent', ha);
     pause(2); % Wait for the image to stabilize
 
     % Trigger camera and capture the image

@@ -51,7 +51,7 @@ fin = nn;
 
 %% capture white
 if sta == 1
-    input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/Hadamard', int2str(n), '_input/hadamard', int2str(1), '.png']));
+    input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_input/hadamard_1.png']));
     input = imresize(input, [n, n]);
     hadamard_temp = input;
 
@@ -89,7 +89,7 @@ for chunk_start = sta:chunk_size:fin
     hadamard = zeros(n, n, chunk_end - chunk_start + 1);
 
     for k = chunk_start:chunk_end
-        input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/Hadamard', int2str(n), '_input/hadamard', int2str(k), '.png']));
+        input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_input/hadamard_', int2str(k), '.png']));
         input = imresize(input, [n, n]);
         hadamard(:, :, k - chunk_start + 1) = input;
     end

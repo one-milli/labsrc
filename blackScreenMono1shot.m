@@ -1,11 +1,12 @@
 %% Simulate the capture of the patterns and their use for binary search
 imaqreset
 
-expDate = '240814';
+expDate = '241107';
 trimRowFrom = 351;
 trimRowTo = 850;
-trimColFrom = 371;
-trimColTo = 870;
+trimColFrom = 351;
+trimColTo = 850;
+m = 255;
 n = 128;
 nn = n * n;
 
@@ -72,7 +73,7 @@ pause(2)
 trigger(vid);
 img = getdata(vid, 1);
 img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
-img = imresize(img, [256 256]);
+img = imresize(img, [m m]);
 
 imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/', filename, '.png'], 'BitDepth', 8);
 

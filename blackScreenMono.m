@@ -4,8 +4,9 @@ imaqreset
 expDate = '241107';
 trimRowFrom = 351;
 trimRowTo = 850;
-trimColFrom = 371;
-trimColTo = 870;
+trimColFrom = 351;
+trimColTo = 850;
+m = 255;
 n = 128;
 nn = n * n;
 
@@ -74,6 +75,8 @@ if sta == 1
 
     trigger(vid);
     img = getdata(vid, 1);
+    img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
+    img = imresize(img, [m m]);
 
     imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/capturewhite.png'], 'BitDepth', 8);
 
@@ -120,7 +123,7 @@ for chunk_start = sta:chunk_size:fin
         trigger(vid);
         img = getdata(vid, 1);
         img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
-        img = imresize(img, [256 256]);
+        img = imresize(img, [m m]);
 
         imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_', expDate, '/hadamard_', int2str(k), '.png'], 'BitDepth', 8);
     end

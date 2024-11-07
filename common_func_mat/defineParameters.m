@@ -7,8 +7,8 @@ function params = defineParameters()
     % Trimming parameters
     params.trimRowFrom = 351;
     params.trimRowTo = 850;
-    params.trimColFrom = 371;
-    params.trimColTo = 870;
+    params.trimColFrom = 351;
+    params.trimColTo = 850;
 
     % Image size parameters
     params.m = 255;

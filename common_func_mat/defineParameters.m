@@ -11,6 +11,7 @@ function params = defineParameters()
     params.trimColTo = 870;
 
     % Image size parameters
+    params.m = 255;
     params.n = 128;
     params.nn = params.n ^ 2;
 
@@ -46,7 +47,7 @@ function params = defineParameters()
 
     % Image display and capture settings
     params.filename = 'Cameraman';
-    params.sampleImagePath = '../../OneDrive - m.titech.ac.jp/Lab/data/sample_image128/';
+    params.sampleImagePath = ['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image', num2str(params.n), '/'];
     params.capturePath = ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', params.expDate];
 
     % Ensure capture directory exists

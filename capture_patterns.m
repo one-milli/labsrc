@@ -7,23 +7,23 @@ initializeImageAcquisition();
 params = defineParameters();
 
 % Initialize Figure for Display
-figureHandle = initializeFigure(params.rectPro);
+[hFig, ha] = initializeFigure(params.rectPro);
 
 % Setup Camera
 camera = setupCamera(params);
 
 % Capture White Image
-captureWhiteImage(params, camera, figureHandle);
+captureWhiteImage(params, camera, ha);
 
 % Capture Hadamard Patterns
-captureHadamardPatterns(params, camera, figureHandle);
+captureHadamardPatterns(params, camera, ha);
 
 % Cleanup Camera
 cleanupCamera(camera);
 
 %% Function Definitions %%
 
-function captureWhiteImage(params, camera, figureHandle)
+function captureWhiteImage(params, camera, ha)
     % Capture and save the white image
     if params.sta == 1
         whiteImagePath = fullfile(params.paths.hadamardInput, 'hadamard1.png');
@@ -33,7 +33,7 @@ function captureWhiteImage(params, camera, figureHandle)
         lineImage = createDisplayLine(inputImage, params);
 
         disp('Capturing white image...');
-        imshow(lineImage, 'Parent', figureHandle);
+        imshow(lineImage, 'Parent', ha);
         pause(2);
 
         % Trigger camera and capture image
@@ -46,7 +46,7 @@ function captureWhiteImage(params, camera, figureHandle)
 
 end
 
-function captureHadamardPatterns(params, camera, figureHandle)
+function captureHadamardPatterns(params, camera, ha)
     % Capture Hadamard patterns in chunks
     for chunkStart = params.sta:params.chunkSize:params.fin
         chunkEnd = min(chunkStart + params.chunkSize - 1, params.fin);
@@ -69,7 +69,7 @@ function captureHadamardPatterns(params, camera, figureHandle)
             lineImage = createDisplayLine(hadamardChunk(:, :, k), params);
 
             disp(['Displaying and capturing pattern i = ', num2str(patternIndex)]);
-            imshow(lineImage, 'Parent', figureHandle);
+            imshow(lineImage, 'Parent', ha);
 
             % Pause appropriately
             if patternIndex == params.sta

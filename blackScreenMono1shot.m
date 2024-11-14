@@ -1,7 +1,7 @@
 %% Simulate the capture of the patterns and their use for binary search
 imaqreset
 
-expDate = '241107';
+expDate = '241114';
 trimRowFrom = 351;
 trimRowTo = 850;
 trimColFrom = 351;
@@ -48,7 +48,7 @@ vid.TriggerRepeat = Inf;
 start(vid);
 
 %% capture
-filename = 'Cameraman';
+filename = 'White';
 input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image128/', filename, '.png']));
 input = imresize(input, [n, n]);
 image_disp = input;

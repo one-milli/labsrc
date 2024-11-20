@@ -8,6 +8,24 @@ from PIL import Image, ImageFilter
 import matplotlib.pyplot as plt
 
 
+def calculate_bias(px_cnt, data_path, cap_date):
+    black_img1 = Image.open(f"{data_path}/capture_{cap_date}/Black1.png").convert("L")
+    black_img2 = Image.open(f"{data_path}/capture_{cap_date}/Black2.png").convert("L")
+    black_img3 = Image.open(f"{data_path}/capture_{cap_date}/Black3.png").convert("L")
+    black_img4 = Image.open(f"{data_path}/capture_{cap_date}/Black4.png").convert("L")
+    black_img5 = Image.open(f"{data_path}/capture_{cap_date}/Black5.png").convert("L")
+    black1 = cp.asarray(black_img1) / 255
+    black2 = cp.asarray(black_img2) / 255
+    black3 = cp.asarray(black_img3) / 255
+    black4 = cp.asarray(black_img4) / 255
+    black5 = cp.asarray(black_img5) / 255
+    average = (black1 + black2 + black3 + black4 + black5) / 5
+    average_value = cp.mean(average)
+    bias_vector = cp.full(px_cnt, average_value)
+    print(f"average_value: {average_value}")
+    return bias_vector
+
+
 def get_use_list(n, p):
     """
     1以上n以下の数からランダムにn*p個(0 < p <= 1)を選び、ソートされたリストを返す関数。

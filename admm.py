@@ -9,16 +9,16 @@ import cupyx.scipy.sparse as csp
 
 class Admm:
     max_iter = 300
+    tau = 1e0
     mu1 = 1e-5
     mu2 = 1e-4
     mu3 = 1e-4
     tol = 1e-2
 
-    def __init__(self, H, g, D, tau):
-        self.H = cp.asarray(H)
-        self.g = cp.asarray(g)
-        self.D = csp.csr_matrix(cp.asarray(D))
-        self.tau = tau
+    def __init__(self, H, g, D):
+        self.H = H
+        self.g = g.reshape(-1, 1)
+        self.D = D
         self.HTH = self.H.T @ self.H
         self.DTD = csp.csr_matrix(self.D.T @ self.D)
         self.m, self.n = self.H.shape

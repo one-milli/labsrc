@@ -78,7 +78,7 @@ def images2matrix(folder_path, use_list, thin_out=False):
     images = []
     for i in use_list.tolist():
         img = Image.open(os.path.join(folder_path, files[i - 1])).convert("L")
-        img_array = cp.asarray(img) / 255
+        img_array = (cp.asarray(img) / 255).astype(cp.float32)
         if thin_out:
             img_array = img_array[::2, ::2].ravel()
         else:

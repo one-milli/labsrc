@@ -1,12 +1,15 @@
 %% パラメータの設定
-DATA_PATH = '../data';
+DATA_PATH = '../../OneDrive - m.titech.ac.jp/Lab/data';
+% DATA_PATH = '../data';
 OBJ_NAME = 'Cameraman';
-H_SETTING = 'gf';
+H_SETTING = 'p-5_lmd-100_m-128';
+% H_SETTING = 'gf';
 CAP_DATE = '241114';
 EXP_DATE = '241118';
 n = 128;
-m = 255;
-PREFIX = 'int_';
+m = 128;
+PREFIX = '';
+% PREFIX = 'int_';
 
 %% Dの作成
 D = create_D_mono(n);
@@ -14,18 +17,20 @@ D = create_D_mono(n);
 %% 画像の読み込みと前処理
 image_path = fullfile(DATA_PATH, ['capture_' CAP_DATE], [OBJ_NAME '.png']);
 captured = imread(image_path);
+% resize
+captured = imresize(captured, [m, m]);
 
 if size(captured, 3) == 3
     captured = rgb2gray(captured);
 end
 
-captured = cast(captured, 'single');
+captured = cast(captured, 'double') / 255;
 g = captured(:);
 
 %% システム行列Hの読み込み
 H_path = fullfile(DATA_PATH, EXP_DATE, 'systemMatrix', ['H_matrix_' PREFIX H_SETTING '.mat']);
 data = load(H_path);
-H = data.H;
+H = cast(data.H, 'double');
 % H が疎行列であることの確認
 if issparse(H)
     fprintf('H は疎行列です。サイズ: %dx%d\n', size(H, 1), size(H, 2));
@@ -63,7 +68,7 @@ if ~exist(reconst_dir, 'dir')
     mkdir(reconst_dir);
 end
 
-save_filename = sprintf('%s_%s_admm_t-%.2f_m%.2f%.2f%.2f.png', ...
+save_filename = sprintf('%s_%s_admm_t-%.1f_m%.1f%.1f%.1f.png', ...
     OBJ_NAME, H_SETTING, tau_log, mu1_log, mu2_log, mu3_log);
 save_path = fullfile(reconst_dir, save_filename);
 imwrite(f_image, save_path, 'png');

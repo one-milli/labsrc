@@ -4,7 +4,6 @@ min_f ||g-Hf||^2 + tau*||Df||_1 + i(f)
 """
 
 import cupy as cp
-import cupyx.scipy.sparse as csp
 
 
 class Admm:

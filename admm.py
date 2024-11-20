@@ -19,8 +19,8 @@ class Admm:
         self.H = H
         self.g = g.reshape(-1, 1)
         self.D = D
-        self.HTH = csp.csr_matrix(self.H.T @ self.H)
-        self.DTD = csp.csr_matrix(self.D.T @ self.D)
+        self.HTH = self.H.T @ self.H
+        self.DTD = self.D.T @ self.D
         self.m, self.n = self.H.shape
         self.r = cp.zeros((self.n, 1))
         self.f = cp.ones((self.n, 1))

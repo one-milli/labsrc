@@ -51,70 +51,74 @@ classdef Admm
             obj.eta = obj.mu2 * (D * obj.f);
             obj.rho = zeros(obj.n, 1);
 
+            if issparse(H)
+                fprintf('H is a sparse matrix. Size: %dx%d\n', size(H, 1), size(H, 2));
+            end
+
+            if issparse(D)
+                fprintf('D is a sparse matrix. Size: %dx%d\n', size(D, 1), size(D, 2));
+            end
+
+            if issparse(HTH)
+                fprintf('HTH is a sparse matrix. Size: %dx%d\n', size(HTH, 1), size(HTH, 2));
+            end
+
+            if issparse(DTD)
+                fprintf('DTD is a sparse matrix. Size: %dx%d\n', size(DTD, 1), size(DTD, 2));
+            end
+
             disp('Initialized');
         end
 
-        % Soft thresholding operator
         function s = soft_threshold(~, x, sigma)
             s = max(0, abs(x) - sigma) .* sign(x);
         end
 
-        % Compute objective function
         function obj = compute_obj(obj)
             obj = norm(obj.g - obj.H * obj.f) ^ 2 + obj.tau * norm(obj.D * obj.f, 1);
         end
 
-        % Compute relative error
         function e = compute_err(obj, f_new)
             e = abs(norm(f_new - obj.f) / norm(f_new));
         end
 
-        % Update r
         function obj = update_r(obj)
             obj.r = obj.H.' * (obj.mu1 * obj.y - obj.x) + ...
                 obj.D.' * (obj.mu2 * obj.z - obj.eta) + ...
                 obj.mu3 * obj.w - obj.rho;
         end
 
-        % Update f
         function obj = update_f(obj)
             A = obj.HTH + obj.mu2 * obj.DTD + obj.mu3 * eye(obj.n);
             obj.f = A \ obj.r;
         end
 
-        % Update z
         function obj = update_z(obj)
             temp = obj.D * obj.f + obj.eta / obj.mu2;
             obj.z = obj.soft_threshold(temp, obj.tau / obj.mu2);
         end
 
-        % Update w
         function obj = update_w(obj)
             temp = obj.f + obj.rho / obj.mu3;
             obj.w = min(max(temp, 0), 1);
         end
 
-        % Update y
         function obj = update_y(obj)
             obj.y = obj.H * obj.f + obj.g;
         end
 
-        % Update x
         function obj = update_x(obj)
             obj.x = obj.x + obj.mu1 * (obj.H * obj.f - obj.y);
         end
 
-        % Update eta
         function obj = update_eta(obj)
             obj.eta = obj.eta + obj.mu2 * (obj.D * obj.f - obj.z);
         end
 
-        % Update rho
         function obj = update_rho(obj)
             obj.rho = obj.rho + obj.mu3 * (obj.f - obj.w);
         end
 
-        % Solve method
         function [f_sol, err] = solve(obj)
 
             for i = 1:obj.max_iter

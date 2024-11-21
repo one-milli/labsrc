@@ -8,8 +8,6 @@ CAP_DATE = '241114';
 EXP_DATE = '241118';
 n = 128;
 m = 128;
-PREFIX = '';
-% PREFIX = 'int_';
 
 %% Dの作成
 D = create_D_mono(n);
@@ -28,10 +26,10 @@ captured = cast(captured, 'double') / 255;
 g = captured(:);
 
 %% システム行列Hの読み込み
-H_path = fullfile(DATA_PATH, EXP_DATE, 'systemMatrix', ['H_matrix_' PREFIX H_SETTING '.mat']);
+H_path = fullfile(DATA_PATH, EXP_DATE, 'systemMatrix', ['H_matrix_' H_SETTING '.mat']);
 data = load(H_path);
 H = cast(data.H, 'double');
-% H が疎行列であることの確認
+
 if issparse(H)
     fprintf('H は疎行列です。サイズ: %dx%d\n', size(H, 1), size(H, 2));
 else
@@ -68,14 +66,13 @@ if ~exist(reconst_dir, 'dir')
     mkdir(reconst_dir);
 end
 
-save_filename = sprintf('%s_%s_admm_t-%.1f_m%.1f%.1f%.1f.png', ...
+save_filename = sprintf('%s_%s_admm_t-%d_m%dm%dm%d.png', ...
     OBJ_NAME, H_SETTING, tau_log, mu1_log, mu2_log, mu3_log);
 save_path = fullfile(reconst_dir, save_filename);
 imwrite(f_image, save_path, 'png');
 fprintf('Image saved to: %s\n', save_path);
 
 function D = create_D_mono(n)
-    % スパースの単位行列を作成
     I = speye(n ^ 2);
 
     %% Dxの作成
@@ -99,6 +96,5 @@ function D = create_D_mono(n)
     % Dyを計算
     Dy = I - shifted_Iy;
 
-    %% DxとDyを垂直に結合してDを作成
     D = [Dx; Dy];
 end

@@ -51,20 +51,12 @@ classdef Admm
             obj.eta = obj.mu2 * (D * obj.f);
             obj.rho = zeros(obj.n, 1);
 
-            if issparse(H)
-                fprintf('H is a sparse matrix. Size: %dx%d\n', size(H, 1), size(H, 2));
+            if issparse(obj.HTH)
+                fprintf('HTH is a sparse matrix. Size: %dx%d\n', size(obj.HTH, 1), size(obj.HTH, 2));
             end
 
-            if issparse(D)
-                fprintf('D is a sparse matrix. Size: %dx%d\n', size(D, 1), size(D, 2));
-            end
-
-            if issparse(HTH)
-                fprintf('HTH is a sparse matrix. Size: %dx%d\n', size(HTH, 1), size(HTH, 2));
-            end
-
-            if issparse(DTD)
-                fprintf('DTD is a sparse matrix. Size: %dx%d\n', size(DTD, 1), size(DTD, 2));
+            if issparse(obj.DTD)
+                fprintf('DTD is a sparse matrix. Size: %dx%d\n', size(obj.DTD, 1), size(obj.DTD, 2));
             end
 
             disp('Initialized');

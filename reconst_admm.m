@@ -23,7 +23,7 @@ if size(captured, 3) == 3
 end
 
 captured = cast(captured, 'double') / 255;
-g = captured(:);
+g = gpuArray(captured(:));
 
 %% システム行列Hの読み込み
 H_path = fullfile(DATA_PATH, EXP_DATE, 'systemMatrix', ['H_matrix_' H_SETTING '.mat']);
@@ -32,9 +32,10 @@ H = cast(data.H, 'double');
 
 if issparse(H)
     fprintf('H は疎行列です。サイズ: %dx%d\n', size(H, 1), size(H, 2));
+    H = gpuArray(H);
 else
     fprintf('H は疎行列ではありません。疎行列に変換します。\n');
-    H = sparse(H);
+    H = gpuArray(sparse(H));
 end
 
 % Hの情報を表示
@@ -96,5 +97,5 @@ function D = create_D_mono(n)
     % Dyを計算
     Dy = I - shifted_Iy;
 
-    D = [Dx; Dy];
+    D = gpuArray([Dx; Dy]);
 end

@@ -9,7 +9,8 @@ import admm
 
 DATA_PATH = "../data"
 
-OBJ_NAMES = ["White", "Cameraman", "Text", "Daruma", "Woman"]
+# OBJ_NAMES = ["White", "Cameraman", "Text", "Daruma", "Woman"]
+OBJ_NAMES = ["Woman"]
 
 H_SETTINGS = ["gf", "p-5_lmd-100_to-False", "int_p-5_lmd-100_to-True"]
 

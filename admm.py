@@ -3,7 +3,6 @@ Solver for problem below using ADMM
 min_f ||g-Hf||^2 + tau*||Df||_1 + i(f)
 """
 
-import time
 import cupy as cp
 
 

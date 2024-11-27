@@ -52,9 +52,7 @@ class Admm:
 
     def update_f(self):
         A = self.HTH + self.mu2 * self.DTD + self.mu3 * cp.eye(self.n)
-        start = time.time()
         self.f = cp.linalg.solve(A, self.r)
-        print("f solve time =", time.time() - start)
 
     def update_z(self):
         self.z = self.soft_threshold(self.D @ self.f + self.eta / self.mu2, self.tau / self.mu2)
@@ -76,7 +74,6 @@ class Admm:
 
     def solve(self):
         for i in range(self.max_iter):
-            start = time.time()
             pre_f = self.f.copy()
             self.update_r()
             self.update_f()
@@ -88,8 +85,7 @@ class Admm:
             self.update_rho()
             error = self.compute_err(pre_f)
             self.err.append(error)
-            time_elapsed = time.time() - start
-            print("iter =", i, "err =", error, "time =", time_elapsed)
+            print("iter =", i, "err =", error)
             if error < self.tol:
                 break
         return cp.asnumpy(self.f), self.err

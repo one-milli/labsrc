@@ -4,14 +4,15 @@ import cupy as cp
 import scipy.sparse as ssp
 from PIL import Image
 from IPython.display import display
-import package.myUtil as myUtil
+from package import myUtil
 import admm
 
 DATA_PATH = "../data"
-OBJ_NAME = "Cameraman"
-# H_SETTING = "gf"
-H_SETTING = "int_p-5_lmd-100_to-True"
-H_SETTING = "p-5_lmd-100_to-False"
+
+OBJ_NAMES = ["White", "Cameraman", "Text", "Daruma", "Woman"]
+
+H_SETTINGS = ["gf", "p-5_lmd-100_to-False", "int_p-5_lmd-100_to-True"]
+
 CAP_DATE = "241114"
 EXP_DATE = "241127"
 n = 128
@@ -32,29 +33,39 @@ def create_D_mono(n):
 D = create_D_mono(n)
 D = cp.array(D.toarray())
 
-captured = Image.open(f"{DATA_PATH}/capture_{CAP_DATE}/{OBJ_NAME}.png").convert("L")
-captured = cp.asarray(captured)
-black = myUtil.calculate_bias(m**2, DATA_PATH, CAP_DATE)
-g = captured.ravel() - black
+# すべてのOBJ_NAMEとH_SETTINGの組み合わせを処理
+for OBJ_NAME in OBJ_NAMES:
+    captured_path = f"{DATA_PATH}/capture_{CAP_DATE}/{OBJ_NAME}.png"
 
-H = cp.load(f"{DATA_PATH}/{EXP_DATE}/systemMatrix/H_matrix_{H_SETTING}.npy").astype(cp.float32)
-print("H shape:", H.shape, "type(H):", type(H), "H.dtype:", H.dtype)
+    captured = Image.open(captured_path).convert("L")
+    captured = cp.asarray(captured)
+    black = myUtil.calculate_bias(m**2, DATA_PATH, CAP_DATE)
+    g = captured.ravel() - black
 
-admm = admm.Admm(H, g, D)
-f, err = admm.solve()
+    for H_SETTING in H_SETTINGS:
+        H_matrix_path = f"{DATA_PATH}/{EXP_DATE}/systemMatrix/H_matrix_{H_SETTING}.npy"
 
-f = cp.clip(f, 0, 1)
-f = cp.asnumpy(f.reshape(n, n))
-f_image = Image.fromarray((f * 255).astype(np.uint8), mode="L")
-display(f_image)
+        H = cp.load(H_matrix_path).astype(cp.float32)
+        print(f"Processing OBJ_NAME: {OBJ_NAME}, H_SETTING: {H_SETTING}")
+        print("H shape:", H.shape, "type(H):", type(H), "H.dtype:", H.dtype)
 
-tau = np.log10(admm.tau)
-mu1 = np.log10(admm.mu1)
-mu2 = np.log10(admm.mu2)
-mu3 = np.log10(admm.mu3)
+        admm_solver = admm.Admm(H, g, D)
+        f, err = admm_solver.solve()
 
-if not os.path.exists(f"{DATA_PATH}/{EXP_DATE}/reconst"):
-    os.makedirs(f"{DATA_PATH}/{EXP_DATE}/reconst")
-SAVE_PATH = f"{DATA_PATH}/{EXP_DATE}/reconst/{OBJ_NAME}_{H_SETTING}_admm_t-{tau}_m{mu1}m{mu2}m{mu3}.png"
-f_image.save(SAVE_PATH, format="PNG")
-print(SAVE_PATH)
+        f = cp.clip(f, 0, 1)
+        f = cp.asnumpy(f.reshape(n, n))
+        f_image = Image.fromarray((f * 255).astype(np.uint8), mode="L")
+        display(f_image)
+
+        tau = np.log10(admm_solver.tau)
+        mu1 = np.log10(admm_solver.mu1)
+        mu2 = np.log10(admm_solver.mu2)
+        mu3 = np.log10(admm_solver.mu3)
+
+        reconst_dir = f"{DATA_PATH}/{EXP_DATE}/reconst"
+        if not os.path.exists(reconst_dir):
+            os.makedirs(reconst_dir)
+
+        SAVE_PATH = f"{reconst_dir}/{OBJ_NAME}_{H_SETTING}_admm_t-{tau:.2f}_m{mu1:.2f}m{mu2:.2f}m{mu3:.2f}.png"
+        f_image.save(SAVE_PATH, format="PNG")
+        print(f"Saved: {SAVE_PATH}")

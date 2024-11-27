@@ -65,6 +65,6 @@ for OBJ_NAME in OBJ_NAMES:
         if not os.path.exists(reconst_dir):
             os.makedirs(reconst_dir)
 
-        SAVE_PATH = f"{reconst_dir}/{OBJ_NAME}_{H_SETTING}_admm_t-{tau:.2f}_m{mu1:.2f}m{mu2:.2f}m{mu3:.2f}.png"
+        SAVE_PATH = f"{reconst_dir}/{OBJ_NAME}_{H_SETTING}_admm_t-{tau:.1f}_m{mu1:.1f}m{mu2:.1f}m{mu3:.1f}.png"
         f_image.save(SAVE_PATH, format="PNG")
         print(f"Saved: {SAVE_PATH}")

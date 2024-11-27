@@ -8,7 +8,7 @@ import cupy as cp
 
 class Admm:
     max_iter = 300
-    tau = 1e0
+    tau = 1e1
     mu1 = 1e-5
     mu2 = 1e-4
     mu3 = 1e-4

@@ -8,10 +8,11 @@ import admm
 
 DATA_PATH = "../data"
 
-# OBJ_NAMES = ["White", "Cameraman", "Text", "Daruma", "Woman"]
-OBJ_NAMES = ["Woman"]
+OBJ_NAMES = ["White", "Cameraman", "Text", "Daruma", "Woman"]
+# OBJ_NAMES = ["Woman"]
 
-H_SETTINGS = ["gf", "p-5_lmd-100_to-False", "int_p-5_lmd-100_to-True"]
+# H_SETTINGS = ["gf", "p-5_lmd-100_to-False", "int_p-5_lmd-100_to-True"]
+H_SETTINGS = ["gf"]
 
 CAP_DATE = "241114"
 EXP_DATE = "241127"

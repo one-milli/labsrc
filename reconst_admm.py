@@ -3,7 +3,6 @@ import numpy as np
 import cupy as cp
 import scipy.sparse as ssp
 from PIL import Image
-from IPython.display import display
 from package import myUtil
 import admm
 
@@ -56,7 +55,6 @@ for OBJ_NAME in OBJ_NAMES:
         f = cp.clip(f, 0, 1)
         f = cp.asnumpy(f.reshape(n, n))
         f_image = Image.fromarray((f * 255).astype(np.uint8), mode="L")
-        display(f_image)
 
         tau = np.log10(admm_solver.tau)
         mu1 = np.log10(admm_solver.mu1)

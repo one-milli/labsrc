@@ -1,7 +1,7 @@
 %% Simulate the capture of the patterns and their use for binary search
 imaqreset
 
-expDate = '241114';
+expDate = '241128';
 trimRowFrom = 351;
 trimRowTo = 850;
 trimColFrom = 351;
@@ -39,7 +39,7 @@ ha = axes('Parent', h, 'Units', 'pixels', 'Position', [1 1 wx_pro wy_pro]);
 Cam_mode = 'F7_Mono8_1288x964_Mode0';
 vid = videoinput('pointgrey', 1, Cam_mode);
 src = getselectedsource(vid);
-mg = 3; %magnification
+mg = 2; %magnification
 ulc = 500;
 ulr = 750;
 vid.FramesPerTrigger = 1;
@@ -48,8 +48,8 @@ vid.TriggerRepeat = Inf;
 start(vid);
 
 %% capture
-filename = 'White';
-input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image128/', filename, '.png']));
+filename = 'Text';
+input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image256/', filename, '.png']));
 input = imresize(input, [n, n]);
 image_disp = input;
 
@@ -70,12 +70,12 @@ imshow(uint8(Line), 'Parent', ha);
 
 pause(2)
 
-trigger(vid);
-img = getdata(vid, 1);
-img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
-img = imresize(img, [m m]);
+% trigger(vid);
+% img = getdata(vid, 1);
+% img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
+% img = imresize(img, [m m]);
 
-imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/', filename, '.png'], 'BitDepth', 8);
+% imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/', filename, '.png'], 'BitDepth', 8);
 
 %% Stop camera
 stop(vid);

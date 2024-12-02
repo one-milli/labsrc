@@ -5,6 +5,7 @@ import numpy as np
 import cupy as cp
 import scipy as sp
 import matplotlib.pyplot as plt
+import cupyx.scipy.sparse as csp
 from IPython.display import display
 from PIL import Image
 import package.myUtil as myUtil
@@ -63,8 +64,15 @@ if SAVE_AS_SPARSE:
     # Thresholding
     threshold = 1e-4
     H = cp.where(cp.abs(H) < threshold, 0, H)
-    H = sp.sparse.csr_matrix(H.get())
-    sp.io.mmwrite(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.mtx", H)
+    H_csp = csp.csr_matrix(H)
+    H_np = {
+        "data": cp.asnumpy(H_csp.data),
+        "indices": cp.asnumpy(H_csp.indices),
+        "indptr": cp.asnumpy(H_csp.indptr),
+        "shape": H_csp.shape,
+    }
+    np.savez(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz", **H_np)
+    print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz")
     # sp.io.savemat(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.mat", {"H": H.get()})
     # print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.mat")
 else:

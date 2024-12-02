@@ -4,8 +4,49 @@ import re
 import random
 import numpy as np
 import cupy as cp
-from PIL import Image, ImageFilter
+from PIL import Image
 import matplotlib.pyplot as plt
+
+
+def plot_sparse_matrix_cupy(csr, row_range=None, col_range=None, markersize=1):
+    """
+    CSR形式疎行列の非ゼロ要素の分布をプロットします。
+
+    Parameters:
+    - csr: cupyx.scipy.sparse.csr_matrix
+        表示する疎行列。
+    - row_range: tuple (start_row, end_row), optional
+        表示する行の範囲。指定しない場合は全行を表示。
+    - col_range: tuple (start_col, end_col), optional
+        表示する列の範囲。指定しない場合は全列を表示。
+    - markersize: int, optional
+        プロットする点のサイズ。
+    """
+    # 行と列の範囲を指定して部分行列を抽出
+    if row_range is not None or col_range is not None:
+        # デフォルトの範囲を設定
+        start_row, end_row = row_range if row_range else (0, csr.shape[0])
+        start_col, end_col = col_range if col_range else (0, csr.shape[1])
+
+        # 部分行列を抽出
+        csr_sub = csr[start_row:end_row, start_col:end_col]
+    else:
+        csr_sub = csr
+
+    # CuPyのCSR行列をSciPyの形式に変換し、CPUに転送
+    csr_cpu = csr_sub.get()
+
+    # Matplotlibのspy関数を使用してプロット
+    plt.figure(figsize=(8, 8))
+    plt.spy(csr_cpu, markersize=markersize)
+    plt.title(
+        "Non-zero Elements Distribution (Partial View)"
+        if (row_range or col_range)
+        else "Non-zero Elements Distribution"
+    )
+    plt.xlabel("Columns")
+    plt.ylabel("Rows")
+    plt.show()
 
 
 def calculate_bias(px_cnt, data_path, cap_date):

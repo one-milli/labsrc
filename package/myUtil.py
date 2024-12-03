@@ -8,7 +8,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 
-def plot_sparse_matrix_cupy(csr, row_range=None, col_range=None, markersize=1):
+def plot_sparse_matrix_cupy(csr, row_range=None, col_range=None, markersize=0.1):
     """
     CSR形式疎行列の非ゼロ要素の分布をプロットします。
 
@@ -37,7 +37,7 @@ def plot_sparse_matrix_cupy(csr, row_range=None, col_range=None, markersize=1):
     csr_cpu = csr_sub.get()
 
     # Matplotlibのspy関数を使用してプロット
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(15, 15))
     plt.spy(csr_cpu, markersize=markersize)
     plt.title(
         "Non-zero Elements Distribution (Partial View)"

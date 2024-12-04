@@ -20,6 +20,7 @@ class Admm:
         self.D = D
         self.HTH = self.H.T @ self.H
         self.DTD = self.D.T @ self.D
+        self.A = self.HTH + self.mu2 * self.DTD + self.mu3 * cp.eye(self.n)
         self.m, self.n = self.H.shape
         self.r = cp.zeros((self.n, 1))
         self.f = cp.ones((self.n, 1))
@@ -50,11 +51,11 @@ class Admm:
         )
 
     def update_f(self):
-        A = self.HTH + self.mu2 * self.DTD + self.mu3 * cp.eye(self.n)
-        self.f = cp.linalg.solve(A, self.r)
+        self.f = cp.linalg.solve(self.A, self.r)
 
     def update_z(self):
-        self.z = self.soft_threshold(self.D @ self.f + self.eta / self.mu2, self.tau / self.mu2)
+        self.z = self.soft_threshold(
+            self.D @ self.f + self.eta / self.mu2, self.tau / self.mu2)
 
     def update_w(self):
         self.w = cp.clip(self.f + self.rho / self.mu3, 0, 1)

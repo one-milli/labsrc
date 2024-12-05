@@ -48,7 +48,7 @@ vid.TriggerRepeat = Inf;
 start(vid);
 
 %% capture
-data = load('use_list_5.0.mat');
+data = load('use_list256_5.0.mat');
 sta = 1;
 fin = floor(nn * 0.05);
 chunk_size = 64;

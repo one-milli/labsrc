@@ -4,6 +4,7 @@ import os
 import multiprocessing
 import numpy as np
 from PIL import Image
+from scipy.io import loadmat
 from tqdm import tqdm
 
 
@@ -88,6 +89,13 @@ def generate_and_save_image(args):
     Returns:
         int: 生成した画像の番号
     """
+    use_list = []
+    exist_use_list = False
+    loaded = loadmat(f"use_list{256}_5.0.mat")
+    if "use_list" in loaded:
+        use_list = loaded["use_list"]
+        exist_use_list = True
+
     u, v, m, b, output_dir = args
     F = get_basis(u, v, m, b)
 
@@ -96,6 +104,9 @@ def generate_and_save_image(args):
 
     # nを計算（1から始まる連番）
     n = u * m + v + 1
+
+    if exist_use_list and n not in use_list:
+        return n
 
     filename = f"hadamard_{n}.png"
     filepath = os.path.join(output_dir, filename)
@@ -111,8 +122,8 @@ def main():
     """
     メイン処理関数（並列処理版）
     """
-    m = 128  # Hadamard画像のサイズを制御
-    b = 7  # <m-1> は <b> ビットで表現可能
+    m = 256  # Hadamard画像のサイズを制御
+    b = 8  # <m-1> は <b> ビットで表現可能
 
     output_dir = f"../../OneDrive - m.titech.ac.jp/Lab/data/hadamard{m}_input"
     os.makedirs(output_dir, exist_ok=True)

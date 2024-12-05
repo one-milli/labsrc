@@ -51,16 +51,11 @@ def plot_sparse_matrix_cupy(csr, row_range=None, col_range=None, markersize=0.1)
 
 
 def calculate_bias(px_cnt, data_path, cap_date):
-    black_img1 = Image.open(
-        f"{data_path}/capture_{cap_date}/Black1.png").convert("L")
-    black_img2 = Image.open(
-        f"{data_path}/capture_{cap_date}/Black2.png").convert("L")
-    black_img3 = Image.open(
-        f"{data_path}/capture_{cap_date}/Black3.png").convert("L")
-    black_img4 = Image.open(
-        f"{data_path}/capture_{cap_date}/Black4.png").convert("L")
-    black_img5 = Image.open(
-        f"{data_path}/capture_{cap_date}/Black5.png").convert("L")
+    black_img1 = Image.open(f"{data_path}/capture_{cap_date}/Black1.png").convert("L")
+    black_img2 = Image.open(f"{data_path}/capture_{cap_date}/Black2.png").convert("L")
+    black_img3 = Image.open(f"{data_path}/capture_{cap_date}/Black3.png").convert("L")
+    black_img4 = Image.open(f"{data_path}/capture_{cap_date}/Black4.png").convert("L")
+    black_img5 = Image.open(f"{data_path}/capture_{cap_date}/Black5.png").convert("L")
     black1 = cp.asarray(black_img1) / 255
     black2 = cp.asarray(black_img2) / 255
     black3 = cp.asarray(black_img3) / 255
@@ -102,7 +97,7 @@ def get_use_list(n, p):
 
     use_list = np.array(use_list)
     # save as mat file
-    sio.savemat(f"use_list_{100*p}.mat", {"use_list": use_list})
+    sio.savemat(f"use_list{int(math.sqrt(n))}_{100*p}.mat", {"use_list": use_list})
 
     return use_list
 
@@ -139,8 +134,7 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=1.0, resiz
     SEED = 5
     IMG_NAME = "hadamard"
     files = os.listdir(folder_path)
-    files.sort(key=lambda f: int(
-        re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
+    files.sort(key=lambda f: int(re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
     if rand:
         random.seed(SEED)
         random.shuffle(files)
@@ -148,8 +142,7 @@ def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=1.0, resiz
     total_files = len(files)
     number_of_files_to_load = int(total_files * ratio)
     selected_files = files[:number_of_files_to_load]
-    selected_files.sort(key=lambda f: int(
-        re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
+    selected_files.sort(key=lambda f: int(re.search(f"{IMG_NAME}_(\d+).png", f).group(1)))
 
     images = []
     use_list = []

@@ -97,7 +97,7 @@ def get_use_list(n, p):
 
     use_list = np.array(use_list)
     # save as mat file
-    sio.savemat(f"use_list{int(math.sqrt(n))}_{100*p}.mat", {"use_list": use_list})
+    # sio.savemat(f"use_list{int(math.sqrt(n))}_{100*p}.mat", {"use_list": use_list})
 
     return use_list
 

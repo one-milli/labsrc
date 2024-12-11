@@ -1,8 +1,6 @@
 # %%
 import os
 import math
-import time
-from typing import Callable
 import numpy as np
 import cupy as cp
 import cupyx.scipy.sparse as csp
@@ -13,7 +11,7 @@ import package.myUtil as myUtil
 
 # %%
 cap_dates = {128: "241114", 256: "241205"}
-n = 256
+n = 128
 LAMBDA = 100
 RATIO = 0.05
 DO_THIN_OUT = False
@@ -58,20 +56,16 @@ F_hat = 2 * F - 1
 G_hat = 2 * G - H1
 g = G_hat.flatten(order="F").astype(cp.float32)
 del F, G, H1, G_hat
+cp._default_memory_pool.free_all_blocks()
 
 
 # %%
-def vector2matrixCp(vector: cp.ndarray, s: int, t: int) -> cp.ndarray:
-    return vector.reshape(s, t, order="F")
-
-
 def mult_mass(X: cp.ndarray, h: cp.ndarray) -> cp.ndarray:
     return (h.reshape(-1, X.shape[1], order="F") @ X.T).ravel(order="F")
 
 
-# %%
-def prox_l122(y: cp.ndarray, gamma: float) -> cp.ndarray:
-    Y = cp.asarray(vector2matrixCp(y, M, N)).astype(cp.float32)
+def prox_l122(y: cp.ndarray, gamma: float, N: int) -> cp.ndarray:
+    Y = cp.asarray(y.reshape(M, N, order="F")).astype(cp.float32)
     l1_norms = cp.sum(cp.absolute(Y), axis=1)
     factor = (2 * gamma) / (1 + 2 * gamma * N)
     X = cp.zeros_like(Y)
@@ -83,25 +77,15 @@ def fista(
     Ft: cp.ndarray,
     g: cp.ndarray,
     lmd: float,
-    prox: Callable[[cp.ndarray, float], cp.ndarray],
+    N: int,
+    M: int,
     max_iter: int = 500,
     tol: float = 1e-3,
 ) -> cp.ndarray:
     """
     Solve the optimization problem using FISTA:
     min_h ||g - Xh||_2^2 + lambda * ||h||_{1,2}^2
-
-    Parameters:
-    - Ft: numpy array, the matrix Ft
-    - g: numpy array, the vector g
-    - lmd: float, the regularization parameter
-
-    Returns:
-    - h: numpy array, the solution vector h
     """
-    K = Ft.shape[0]
-    N = Ft.shape[1]
-    M = g.shape[0] // K
     t = 1
     h = cp.zeros(M * N, dtype=cp.float32)
     h_old = cp.zeros_like(h)
@@ -111,33 +95,29 @@ def fista(
     # L = cp.linalg.norm(Ft.T @ Ft, ord=2) * 3
     # print("L:", L)
     L = N * 3
-    gamma = 1 / L
+    gamma = 1.0 / L
 
-    start = time.perf_counter()
     for i in range(max_iter):
         t_old = t
         h_old = h.copy()
 
-        h = prox(y - gamma * mult_mass(Ft.T, (mult_mass(Ft, y) - g)), gamma * lmd)
+        h = prox_l122(y - gamma * mult_mass(Ft.T, (mult_mass(Ft, y) - g)), gamma * lmd, N)
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
-        y = h + (t_old - 1) / t * (h - h_old)
+        y = h + ((t_old - 1) / t) * (h - h_old)
 
         error = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
-
         print(f"iter: {i}, error: {error}")
         if error < tol:
             break
-
-    end = time.perf_counter()
-    print(f"Elapsed time: {end-start}")
 
     return h
 
 
 # %%
-h = fista(F_hat.T, g, LAMBDA, prox_l122)
+h = fista(F_hat.T, g, LAMBDA, N, M)
 H = h.reshape(M, N, order="F")  # cupy
 print("H shape:", H.shape)
+del h
 
 # %%
 if SAVE_AS_SPARSE:

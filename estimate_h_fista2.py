@@ -6,7 +6,6 @@ import cupy as cp
 import cupyx.scipy.sparse as csp
 import cupyx.scipy.sparse.linalg as csla
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 from PIL import Image
 from IPython.display import display
 import package.myUtil as myUtil
@@ -67,10 +66,6 @@ cp._default_memory_pool.free_all_blocks()
 
 
 # %%
-def prox_l1(Y: cp.ndarray, gamma: float) -> cp.ndarray:
-    return csp.csr_matrix(cp.sign(Y) * cp.maximum(cp.absolute(Y) - gamma, 0))
-
-
 def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> csp.csr_matrix:
     factor = (2 * gamma) / (1 + 2 * gamma * N)
     l1_norms = cp.sum(cp.absolute(Y), axis=1)
@@ -91,14 +86,6 @@ def fista(
     """
     Solve the optimization problem using FISTA:
     min_h ||g - Xh||_2^2 + lambda * ||h||_1,2^2
-
-    Parameters:
-    - Ft: numpy array, the matrix Ft
-    - g: numpy array, the vector g
-    - lmd: float, the regularization parameter
-
-    Returns:
-    - h: numpy array, the solution vector h
     """
     t = 1
     Ht = csp.csr_matrix((N, M), dtype=cp.float32)
@@ -106,8 +93,10 @@ def fista(
     Yt = csp.csr_matrix((N, M), dtype=cp.float32)
 
     # Lipschitz constant
-    # L = np.linalg.norm(Ft.T @ Ft, ord=2) * 3
-    gamma = 1 / (N * 3)
+    # L = cp.linalg.norm(fft, ord=2) * 3
+    # print("L:", L)
+    L = N * 3
+    gamma = 1.0 / L
 
     for i in range(max_iter):
         t_old = t
@@ -116,8 +105,8 @@ def fista(
         for c in range(32):
             start = c * chunk_size
             end = min((c + 1) * chunk_size, M)
-            A_dense = Yt[:, start:end] - gamma * (fft @ Yt[:, start:end] - fgt[:, start:end])
-            Ht[:, start:end] = prox_l1(A_dense, gamma * lmd)
+            A_dense = Yt[start:end, :] - gamma * (fft[start:end, :] @ Yt - fgt[start:end, :])
+            Ht[start:end, :] = prox_l122(A_dense, gamma * lmd, N)
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
         Yt = Ht + ((t_old - 1) / t) * (Ht - Ht_old)
 
@@ -130,9 +119,10 @@ def fista(
 
 
 # %%
-chunk_size = M // 32
+chunk_size = N // 32
 Ht = fista(fft, fgt, LAMBDA, N, M, chunk_size)
 H = Ht.T
+print("H shape:", H.shape)
 del Ht
 
 # %%

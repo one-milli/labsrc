@@ -118,8 +118,8 @@ def images2matrix(folder_path, use_list, thin_out=False):
     files.sort(key=lambda f: int(re.search(r"(\d+).png", f).group(1)))
 
     images = []
-    for i in use_list.tolist():
-        # for i in range(1, len(use_list) + 1):
+    # for i in use_list.tolist():
+    for i in range(1, len(use_list) + 1):
         img = Image.open(os.path.join(folder_path, files[i - 1])).convert("L")
         img_array = (cp.asarray(img) / 255).astype(cp.float32)
         if thin_out:

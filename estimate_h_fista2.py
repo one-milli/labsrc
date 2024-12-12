@@ -33,19 +33,23 @@ if not os.path.exists(DIRECTORY + "/systemMatrix"):
 use_list = myUtil.get_use_list(n * n, RATIO)
 
 # %%
-G = myUtil.images2matrix(f"{DATA_PATH}/{IMG_NAME}{n}_cap_{CAP_DATE}/", use_list, thin_out=DO_THIN_OUT)
-F = myUtil.images2matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/", use_list).astype(cp.int8)
+G = myUtil.images2matrix(
+    f"{DATA_PATH}/{IMG_NAME}{n}_cap_{CAP_DATE}/", use_list, thin_out=DO_THIN_OUT)
+F = myUtil.images2matrix(
+    f"{DATA_PATH}/{IMG_NAME}{n}_input/", use_list).astype(cp.int8)
 M, K = G.shape
 N, K = F.shape
 print("G shape:", G.shape, "F shape:", F.shape, "M=", M, "N=", N, "K=", K)
-print("G max:", G.max(), "G min:", G.min(), "F max:", F.max(), "F min:", F.min())
+print("G max:", G.max(), "G min:", G.min(),
+      "F max:", F.max(), "F min:", F.min())
 
 black = myUtil.calculate_bias(M, DATA_PATH, CAP_DATE)
 B = cp.tile(black[:, None], K)
 
 G = G - B
 
-white_img = Image.open(f"{DATA_PATH}/capture_{CAP_DATE}/White.png").convert("L")
+white_img = Image.open(
+    f"{DATA_PATH}/capture_{CAP_DATE}/White.png").convert("L")
 white = (cp.asarray(white_img) / 255).astype(cp.float32)
 if DO_THIN_OUT:
     white = white[::2, ::2].ravel() - black
@@ -59,13 +63,14 @@ del F, G, H1
 cp._default_memory_pool.free_all_blocks()
 
 # %%
-fft = (F_hat @ F_hat.T).astype(cp.int8)
-fgt = (F_hat @ G_hat.T).astype(cp.float32)
+fft = (F_hat @ F_hat.T).astype(cp.float32)
+gft = (G_hat @ F_hat.T).astype(cp.float32)
 del F_hat, G_hat
 cp._default_memory_pool.free_all_blocks()
 
-
 # %%
+
+
 def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> csp.csr_matrix:
     factor = (2 * gamma) / (1 + 2 * gamma * N)
     l1_norms = cp.sum(cp.absolute(Y), axis=1)
@@ -75,7 +80,7 @@ def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> csp.csr_matrix:
 
 def fista(
     fft: cp.ndarray,
-    fgt: cp.ndarray,
+    gft: cp.ndarray,
     lmd: float,
     N: int,
     M: int,
@@ -85,12 +90,12 @@ def fista(
 ) -> cp.ndarray:
     """
     Solve the optimization problem using FISTA:
-    min_h ||g - Xh||_2^2 + lambda * ||h||_1,2^2
+    min_h ||G - HF||_F^2 + lambda * ||H||_1,2^2
     """
     t = 1
-    Ht = csp.csr_matrix((N, M), dtype=cp.float32)
-    Ht_old = csp.csr_matrix((N, M), dtype=cp.float32)
-    Yt = csp.csr_matrix((N, M), dtype=cp.float32)
+    H = csp.csr_matrix((M, N), dtype=cp.float32)
+    H_old = csp.csr_matrix((M, N), dtype=cp.float32)
+    Y = csp.csr_matrix((M, N), dtype=cp.float32)
 
     # Lipschitz constant
     # L = cp.linalg.norm(fft, ord=2) * 3
@@ -100,39 +105,39 @@ def fista(
 
     for i in range(max_iter):
         t_old = t
-        Ht_old = Ht.copy()
+        H_old = H.copy()
 
         for c in range(32):
             start = c * chunk_size
             end = min((c + 1) * chunk_size, M)
-            A_dense = Yt[start:end, :] - gamma * (fft[start:end, :] @ Yt - fgt[start:end, :])
-            Ht[start:end, :] = prox_l122(A_dense, gamma * lmd, N)
+            A_dense = Y[start:end, :] - gamma * \
+                (Y[start:end, :] @ fft - gft[start:end, :])
+            H[start:end, :] = prox_l122(A_dense, gamma * lmd, N)
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
-        Yt = Ht + ((t_old - 1) / t) * (Ht - Ht_old)
+        Y = H + ((t_old - 1) / t) * (H - H_old)
 
-        error = csla.norm(Ht - Ht_old) / csla.norm(Ht)
+        error = csla.norm(H - H_old) / csla.norm(H)
         print(f"iter: {i}, error: {error}")
         if error < tol:
             break
 
-    return Ht
+    return H
 
 
 # %%
-chunk_size = N // 32
-Ht = fista(fft, fgt, LAMBDA, N, M, chunk_size)
-H = Ht.T
+chunk_size = M // 32
+H = fista(fft, gft, LAMBDA, N, M, chunk_size)
 print("H shape:", H.shape)
-del Ht
 
 # %%
 if SAVE_AS_SPARSE:
-    print(f"shape: {H.shape}, nnz: {H.nnz}({H.nnz / H.shape[0] / H.shape[1] * 100:.2f}%)")
+    print(
+        f"shape: {H.shape}, nnz: {H.nnz}({H.nnz / H.shape[0] / H.shape[1] * 100:.2f}%)")
     H_np = {
         "data": cp.asnumpy(H.data),
         "indices": cp.asnumpy(H.indices),
         "indptr": cp.asnumpy(H.indptr),
-        "shape": H.shape,
+        "shape": H.shape
     }
     np.savez(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz", **H_np)
     print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz")
@@ -143,7 +148,8 @@ else:
 
 # %%
 SAMPLE_NAME = "Cameraman"
-sample_image = Image.open(f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert("L")
+sample_image = Image.open(
+    f"{DATA_PATH}/sample_image{n}/{SAMPLE_NAME}.png").convert("L")
 sample_image = cp.asarray(sample_image).flatten() / 255
 
 m = int(math.sqrt(M))
@@ -153,11 +159,11 @@ Hf = cp.asnumpy(Hf.reshape(m, m))
 print("Hf shape:", Hf.shape)
 
 Hf_pil = Image.fromarray((Hf * 255).astype(np.uint8), mode="L")
-Hf_pil.save(f"{DIRECTORY}/{FILENAME}", format="PNG")
+Hf_pil.save(f"{DIRECTORY}/{FILENAME}", format='PNG')
 print(f"Saved {DIRECTORY}/{FILENAME}")
 display(Hf_pil)
 
-plt.imshow(Hf, cmap="gray", interpolation="nearest")
+plt.imshow(Hf, cmap='gray', interpolation='nearest')
 plt.colorbar()
-plt.title("Grayscale Heatmap")
+plt.title('Grayscale Heatmap')
 plt.show()

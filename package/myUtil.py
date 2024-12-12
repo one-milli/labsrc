@@ -9,6 +9,33 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 
+def plot_heatmap(cupy_array):
+    """
+    2次元のcupy.ndarrayを受け取り、グレースケールのヒートマップを表示します。
+
+    Parameters:
+    cupy_array (cupy.ndarray): ヒートマップを作成する2次元のCuPy配列。
+
+    Returns:
+    None
+    """
+    if not isinstance(cupy_array, cp.ndarray):
+        raise TypeError("入力はcupy.ndarrayでなければなりません。")
+    if cupy_array.ndim != 2:
+        raise ValueError("入力配列は2次元でなければなりません。")
+
+    # CuPy配列をNumPy配列に変換
+    numpy_array = cupy_array.get()
+
+    # ヒートマップをプロット
+    plt.imshow(numpy_array, cmap="gray", aspect="auto")
+    plt.colorbar(label="Intensity")
+    plt.title("Heatmap")
+    plt.xlabel("X-axis")
+    plt.ylabel("Y-axis")
+    plt.show()
+
+
 def plot_sparse_matrix_cupy(csr, row_range=None, col_range=None, markersize=0.1):
     """
     CSR形式疎行列の非ゼロ要素の分布をプロットします。

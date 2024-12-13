@@ -14,7 +14,7 @@ cap_dates = {128: "241114", 256: "241205"}
 n = 128
 LAMBDA = 100
 RATIO = 0.05
-DO_THIN_OUT = False
+DO_THIN_OUT = True
 SAVE_AS_SPARSE = True
 DATA_PATH = "../data"
 IMG_NAME = "hadamard"
@@ -92,21 +92,25 @@ def fista(
     y = cp.zeros_like(h)
 
     # Lipschitz constant
-    # L = cp.linalg.norm(Ft.T @ Ft, ord=2) * 3
-    # print("L:", L)
-    L = N * 3
-    gamma = 1.0 / L
+    eigs = cp.linalg.eigvalsh(Ft.T @ Ft)
+    L = cp.max(eigs)
+    print("L:", L)
+    gamma = 1.0 / (L * 3)
 
     for i in range(max_iter):
         t_old = t
         h_old = h.copy()
 
-        h = prox_l122(y - gamma * mult_mass(Ft.T, (mult_mass(Ft, y) - g)), gamma * lmd, N)
+        a = y - gamma * mult_mass(Ft.T, (mult_mass(Ft, y) - g))
+        h = prox_l122(a, gamma * lmd, N)
+        print(cp.linalg.norm(h))
         t = (1 + np.sqrt(1 + 4 * t_old**2)) / 2
         y = h + ((t_old - 1) / t) * (h - h_old)
 
-        error = cp.linalg.norm(h - h_old) / cp.linalg.norm(h)
-        print(f"iter: {i}, error: {error}")
+        top = cp.linalg.norm(h - h_old)
+        bottom = cp.linalg.norm(h)
+        error = top / bottom
+        print(f"iter: {i}, error: {error} = {top} / {bottom}")
         if error < tol:
             break
 

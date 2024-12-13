@@ -4,9 +4,30 @@ import re
 import random
 import numpy as np
 import cupy as cp
+import cupyx.scipy.sparse as csp
 import scipy.io as sio
 from PIL import Image
 import matplotlib.pyplot as plt
+
+
+def get_csr_memory_usage_mib(csr_mat: csp.csr_matrix) -> float:
+    """
+    指定されたCSR疎行列のメモリ使用量をMiBで返します。
+
+    Parameters:
+    csr_mat (cupyx.scipy.sparse.csr_matrix): メモリ使用量を計算するCSR疎行列。
+
+    Returns:
+    float: メモリ使用量（MiB）。
+    """
+    data_bytes = csr_mat.data.nbytes
+    indices_bytes = csr_mat.indices.nbytes
+    indptr_bytes = csr_mat.indptr.nbytes
+
+    total_bytes = data_bytes + indices_bytes + indptr_bytes
+    total_mib = total_bytes / (1024**2)  # バイトをMiBに変換
+
+    return total_mib
 
 
 def plot_heatmap(cupy_array):

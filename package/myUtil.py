@@ -176,7 +176,7 @@ def images2matrix(folder_path, use_list, thin_out=False):
             img_array = img_array.ravel()
         images.append(img_array)
 
-    return np.column_stack(images)
+    return cp.column_stack(images)
 
 
 def images_to_matrix(folder_path, convert_gray=True, rand=True, ratio=1.0, resize=False, ressize=255, thin_out=False):

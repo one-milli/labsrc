@@ -90,7 +90,7 @@ EXP_DATE = "241206"
 # システム行列 H
 loaded = cp.load(f"{DATA_PATH}/{EXP_DATE}/systemMatrix/H_matrix_{H_SETTING}.npz")
 H = csp.csr_matrix(
-    (cp.asnumpy(loaded["data"]), cp.asnumpy(loaded["indices"]), cp.asnumpy(loaded["indptr"])),
+    (cp.array(loaded["data"]), cp.array(loaded["indices"]), cp.array(loaded["indptr"])),
     shape=tuple(loaded["shape"]),
 )
 print(f"shape: {H.shape}, nnz: {H.nnz}({H.nnz / H.shape[0] / H.shape[1] * 100:.2f}%)")

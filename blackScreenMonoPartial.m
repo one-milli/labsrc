@@ -1,7 +1,7 @@
 %% Simulate the capture of the patterns and their use for binary search
 imaqreset
 
-expDate = '241205';
+expDate = '241216';
 trimRowFrom = 351;
 trimRowTo = 850;
 trimColFrom = 351;
@@ -61,7 +61,7 @@ for chunk_start = sta:chunk_size:fin
     for k = chunk_start:chunk_end
         ind = data.use_list(k);
         input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_input/hadamard_', int2str(ind), '.png']));
-        input = imresize(input, [n, n]);
+        % input = imresize(input, [n, n]);
         hadamard(:, :, k - chunk_start + 1) = input;
     end
 
@@ -88,7 +88,7 @@ for chunk_start = sta:chunk_size:fin
         trigger(vid);
         img = getdata(vid, 1);
         img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
-        img = imresize(img, [m m]);
+        % img = imresize(img, [m m]);
 
         imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_', expDate, '/hadamard_', int2str(ind), '.png'], 'BitDepth', 8);
     end

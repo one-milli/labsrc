@@ -4,8 +4,8 @@ imaqreset
 expDate = '241216';
 trimRowFrom = 351;
 trimRowTo = 850;
-trimColFrom = 351;
-trimColTo = 850;
+trimColFrom = 221;
+trimColTo = 720;
 m = 511;
 n = 256;
 nn = n * n;

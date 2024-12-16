@@ -4,8 +4,8 @@ imaqreset
 expDate = '241205';
 trimRowFrom = 351;
 trimRowTo = 850;
-trimColFrom = 351;
-trimColTo = 850;
+trimColFrom = 221;
+trimColTo = 720;
 m = 511;
 n = 256;
 nn = n * n;
@@ -48,9 +48,9 @@ vid.TriggerRepeat = Inf;
 start(vid);
 
 %% capture
-filename = 'Text';
+filename = 'Check';
 input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image', int2str(n), '/', filename, '.png']));
-input = imresize(input, [n, n]);
+% input = imresize(input, [n, n]);
 image_disp = input;
 
 Line = zeros(wy_pro, wx_pro);
@@ -73,7 +73,7 @@ pause(2)
 trigger(vid);
 img = getdata(vid, 1);
 img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
-img = imresize(img, [m m]);
+% img = imresize(img, [m m]);
 
 imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/', filename, '.png'], 'BitDepth', 8);
 

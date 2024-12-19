@@ -60,14 +60,7 @@ for chunk_start = sta:chunk_size:fin
 
     for k = chunk_start:chunk_end
         filename_r = "../../OneDrive - m.titech.ac.jp/Lab/data/sample_image" + string(n) + "/" + test_image(k) + ".png";
-        img = imread(filename_r);
-
-        if size(img, 3) == 3
-            input = uint8(rgb2gray(img));
-        else
-            input = uint8(img);
-        end
-
+        input = uint8(imread(convertStringsToChars(filename_r)));
         % input = imresize(input, [n, n]);
         hadamard(:, :, k - chunk_start + 1) = input;
     end

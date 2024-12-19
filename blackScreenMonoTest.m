@@ -48,7 +48,7 @@ vid.TriggerRepeat = Inf;
 start(vid);
 
 %% capture
-test_image = ["Black", "Black", "Black", "Black", "Black", "White", "Cameraman", "Text", "Clock"];
+test_image = ["Black1", "Black2", "Black3", "Black4", "Black5", "White", "Cameraman", "Text", "Clock"];
 sta = 1;
 fin = 9;
 chunk_size = 1;
@@ -88,7 +88,7 @@ for chunk_start = sta:chunk_size:fin
         img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
         img = imresize(img, [m m]);
 
-        imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_', expDate, '/hadamard_', int2str(ind), '.png'], 'BitDepth', 8);
+        imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_', expDate, '/', test_image(k), '.png'], 'BitDepth', 8);
     end
 
     clear hadamard;

@@ -59,7 +59,8 @@ for chunk_start = sta:chunk_size:fin
     hadamard = zeros(n, n, chunk_end - chunk_start + 1);
 
     for k = chunk_start:chunk_end
-        input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/sample_image', int2str(n), '/', test_image(k), '.png']));
+        filename_r = "../../OneDrive - m.titech.ac.jp/Lab/data/sample_image" + string(n) + "/" + test_image(k) + ".png";
+        input = uint8(imread(filename_r));
         % input = imresize(input, [n, n]);
         hadamard(:, :, k - chunk_start + 1) = input;
     end
@@ -88,7 +89,8 @@ for chunk_start = sta:chunk_size:fin
         img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
         img = imresize(img, [m m]);
 
-        imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_', expDate, '/', test_image(k), '.png'], 'BitDepth', 8);
+        filename_w = "../../OneDrive - m.titech.ac.jp/Lab/data/hadamard" + string(n) + "_cap_" + expDate + '/' + test_image(k) + ".png";
+        imwrite(img, filename_w, 'BitDepth', 8);
     end
 
     clear hadamard;

@@ -48,7 +48,7 @@ vid.TriggerRepeat = Inf;
 start(vid);
 
 %% capture
-test_image = ["Black1", "Black2", "Black3", "Black4", "Black5", "White", "Cameraman", "Text", "Clock"];
+test_image = ['Black1', 'Black2', 'Black3', 'Black4', 'Black5', 'White', 'Cameraman', 'Text', 'Clock'];
 sta = 1;
 fin = 9;
 chunk_size = 1;
@@ -59,7 +59,7 @@ for chunk_start = sta:chunk_size:fin
     hadamard = zeros(n, n, chunk_end - chunk_start + 1);
 
     for k = chunk_start:chunk_end
-        input = uint8(imread("../../OneDrive - m.titech.ac.jp/Lab/data/sample_image", int2str(n), "/", test_image(k), ".png"));
+        input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image', int2str(n), '/', test_image(k), '.png']));
         % input = imresize(input, [n, n]);
         hadamard(:, :, k - chunk_start + 1) = input;
     end
@@ -88,8 +88,7 @@ for chunk_start = sta:chunk_size:fin
         img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
         img = imresize(img, [m m]);
 
-        filename_w = "../../OneDrive - m.titech.ac.jp/Lab/data/hadamard" + string(n) + "_cap_" + expDate + '/' + test_image(k) + ".png";
-        imwrite(img, filename_w, 'BitDepth', 8);
+        imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', string(n), '_cap_', expDate, '/', test_image(k), '.png'], 'BitDepth', 8);
     end
 
     clear hadamard;

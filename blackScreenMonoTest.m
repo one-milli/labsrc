@@ -51,7 +51,7 @@ start(vid);
 test_image = ["Black1", "Black2", "Black3", "Black4", "Black5", "White", "Cameraman", "Text", "Clock"];
 sta = 1;
 fin = 9;
-chunk_size = 1;
+chunk_size = 2;
 
 for chunk_start = sta:chunk_size:fin
     chunk_end = min(chunk_start + chunk_size - 1, fin);
@@ -85,7 +85,7 @@ for chunk_start = sta:chunk_size:fin
 
         end
 
-        disp(['i = ', int2str(k)])
+        disp(test_image(k))
 
         imshow(Line, 'Parent', ha);
 

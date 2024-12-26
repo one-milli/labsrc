@@ -2,10 +2,10 @@
 imaqreset
 
 expDate = '241216';
-trimRowFrom = 351;
-trimRowTo = 850;
-trimColFrom = 221;
-trimColTo = 720;
+trimRowFrom = 381;
+trimRowTo = 930;
+trimColFrom = 301;
+trimColTo = 850;
 m = 511;
 n = 256;
 nn = n * n;

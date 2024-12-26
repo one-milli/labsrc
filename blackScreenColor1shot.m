@@ -51,7 +51,7 @@ start(vid);
 
 %% capture
 filename = 'Parrots';
-image_disp = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image', int2str(n), '/', filename, '.png']));
+image_disp = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image_col', int2str(n), '/', filename, '.bmp']));
 % input = imresize(input, [n, n]);
 % image_disp = input;
 

@@ -43,9 +43,10 @@ src = getselectedsource(vid);
 mg = 1; %magnification
 ulc = 500;
 ulr = 750;
-vid.FramesPerTrigger = 1;
+vid.FramesPerTrigger = 5;
 triggerconfig(vid, 'manual');
-vid.TriggerRepeat = 1;
+vid.TriggerRepeat = 0;
+vid.BufferSize = 5;
 start(vid);
 
 %% capture

@@ -1,11 +1,14 @@
 %% Simulate the capture of the patterns and their use for binary search
+clear all
+close all
+clc
 imaqreset
 
 expDate = '241226';
-trimRowFrom = 351;
-trimRowTo = 850;
-trimColFrom = 221;
-trimColTo = 720;
+trimRowFrom = 381;
+trimRowTo = 930;
+trimColFrom = 301;
+trimColTo = 850;
 m = 500;
 n = 256;
 nn = n * n;
@@ -36,15 +39,14 @@ h = figure('Units', 'pixels', 'DockControls', 'off', 'MenuBar', 'none', 'ToolBar
 ha = axes('Parent', h, 'Units', 'pixels', 'Position', [1 1 wx_pro wy_pro]);
 
 %% Camera Settings
-Cam_mode = 'F7_RGB_1288x964_Mode0';
-vid = videoinput('pointgrey', 1, Cam_mode);
+vid = videoinput('pointgrey', 1, 'F7_RGB_1288x964_Mode0');
 src = getselectedsource(vid);
 mg = 1; %magnification
 ulc = 500;
 ulr = 750;
 vid.FramesPerTrigger = 1;
 triggerconfig(vid, 'manual');
-vid.TriggerRepeat = Inf;
+vid.TriggerRepeat = 1;
 start(vid);
 
 %% capture

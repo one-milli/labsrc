@@ -1,4 +1,6 @@
 %% Simulate the capture of the patterns and their use for binary search
+close all;
+clc;
 imaqreset
 
 expDate = '241216';
@@ -36,15 +38,14 @@ h = figure('Units', 'pixels', 'DockControls', 'off', 'MenuBar', 'none', 'ToolBar
 ha = axes('Parent', h, 'Units', 'pixels', 'Position', [1 1 wx_pro wy_pro]);
 
 %% Camera Settings
-Cam_mode = 'F7_Mono8_1288x964_Mode0';
-vid = videoinput('pointgrey', 1, Cam_mode);
+vid = videoinput('pointgrey', 1, 'F7_Mono8_1288x964_Mode0');
 src = getselectedsource(vid);
 mg = 1; %magnification
 ulc = 500;
 ulr = 750;
-vid.FramesPerTrigger = 1;
+vid.FramesPerTrigger = 5;
 triggerconfig(vid, 'manual');
-vid.TriggerRepeat = Inf;
+vid.TriggerRepeat = 0;
 start(vid);
 
 %% capture
@@ -71,8 +72,9 @@ imshow(uint8(Line), 'Parent', ha);
 pause(2)
 
 trigger(vid);
-img = getdata(vid, 1);
-img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
+frames = getdata(vid, 5);
+avgImg = uint8(mean(frames, 4));
+img = avgImg(trimRowFrom:trimRowTo, trimColFrom:trimColTo);
 % img = imresize(img, [m m]);
 
 imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/', filename, '.png'], 'BitDepth', 8);

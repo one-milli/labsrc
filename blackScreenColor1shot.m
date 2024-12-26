@@ -6,8 +6,8 @@ imaqreset
 expDate = '241226';
 trimRowFrom = 381;
 trimRowTo = 930;
-trimColFrom = 301;
-trimColTo = 850;
+trimColFrom = 251;
+trimColTo = 800;
 m = 500;
 n = 256;
 nn = n * n;
@@ -73,8 +73,9 @@ imshow(uint8(Line), 'Parent', ha);
 pause(2)
 
 trigger(vid);
-img = getdata(vid, 1);
-img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo, :);
+frames = getdata(vid, 5);
+avgImg = uint8(mean(frames, 4));
+img = avgImg(trimRowFrom:trimRowTo, trimColFrom:trimColTo, :);
 % img = imresize(img, [m m]);
 
 imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/capture_', expDate, '/', filename, '.png'], 'BitDepth', 8);

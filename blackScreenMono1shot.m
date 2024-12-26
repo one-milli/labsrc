@@ -6,7 +6,7 @@ trimRowFrom = 351;
 trimRowTo = 850;
 trimColFrom = 221;
 trimColTo = 720;
-m = 511;
+m = 500;
 n = 256;
 nn = n * n;
 
@@ -49,9 +49,9 @@ start(vid);
 
 %% capture
 filename = 'Check';
-input = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image', int2str(n), '/', filename, '.png']));
+image_disp = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/sample_image', int2str(n), '/', filename, '.png']));
 % input = imresize(input, [n, n]);
-image_disp = input;
+% image_disp = input;
 
 Line = zeros(wy_pro, wx_pro);
 

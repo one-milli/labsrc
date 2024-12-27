@@ -63,14 +63,15 @@ start(vid);
 %% capture
 data = load('use_list256_5.0.mat');
 sta = 1;
-fin = floor(nn * 0.05);
+% fin = floor(nn * 0.05);
+fin = 5;
 
 for k = sta:fin
     ind = data.use_list(k);
     image_disp = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_input/hadamard_', int2str(ind), '.png']));
 
     for channel = 1:3
-        Line = zeros(wy_pro, wx_pro, 3);
+        Line = zeros(wy_pro, wx_pro, 3, 'uint8');
 
         for i = 1:n
 

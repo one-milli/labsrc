@@ -57,14 +57,13 @@ ulc = 500;
 ulr = 750;
 vid.FramesPerTrigger = 5;
 triggerconfig(vid, 'manual');
-vid.TriggerRepeat = 0;
+vid.TriggerRepeat = Inf;
 start(vid);
 
 %% capture
 data = load('use_list256_5.0.mat');
 sta = 1;
-% fin = floor(nn * 0.05);
-fin = 5;
+fin = floor(nn * 0.05);
 
 for k = sta:fin
     ind = data.use_list(k);
@@ -90,7 +89,7 @@ for k = sta:fin
         trigger(vid);
         frames = getdata(vid, 5);
         avgImg = uint8(mean(frames, 4));
-        img = img(trimRowFrom:trimRowTo, trimColFrom:trimColTo, :);
+        img = avgImg(trimRowFrom:trimRowTo, trimColFrom:trimColTo, :);
         % img = imresize(img, [m m]);
 
         if channel == 1

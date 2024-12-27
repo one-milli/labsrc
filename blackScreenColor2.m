@@ -12,6 +12,18 @@ m = 500;
 n = 256;
 nn = n * n;
 
+if not(exist(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_R_', expDate], 'dir'))
+    mkdir(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_R_', expDate]);
+end
+
+if not(exist(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_G_', expDate], 'dir'))
+    mkdir(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_G_', expDate]);
+end
+
+if not(exist(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_B_', expDate], 'dir'))
+    mkdir(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_B_', expDate]);
+end
+
 pause('on')
 
 %Projector resolution
@@ -48,12 +60,14 @@ triggerconfig(vid, 'manual');
 vid.TriggerRepeat = 0;
 start(vid);
 
-sta = 1;
-fin = nn;
-
 %% capture
+data = load('use_list256_5.0.mat');
+sta = 1;
+fin = floor(nn * 0.05);
+
 for k = sta:fin
-    image_disp = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_input/hadamard_', int2str(k), '.png']));
+    ind = data.use_list(k);
+    image_disp = uint8(imread(['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_input/hadamard_', int2str(ind), '.png']));
 
     for channel = 1:3
         Line = zeros(wy_pro, wx_pro, 3);
@@ -69,9 +83,7 @@ for k = sta:fin
         end
 
         disp(['i = ', int2str(k)])
-
         imshow(Line, 'Parent', ha);
-
         pause(1)
 
         trigger(vid);
@@ -81,11 +93,11 @@ for k = sta:fin
         % img = imresize(img, [m m]);
 
         if channel == 1
-            imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_R_', expDate, '/hadamard_' int2str(k), '.png'], 'BitDepth', 8);
+            imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_R_', expDate, '/hadamard_' int2str(ind), '.png'], 'BitDepth', 8);
         elseif channel == 2
-            imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_G_', expDate, '/hadamard_' int2str(k), '.png'], 'BitDepth', 8);
+            imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_G_', expDate, '/hadamard_' int2str(ind), '.png'], 'BitDepth', 8);
         elseif channel == 3
-            imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_B_', expDate, '/hadamard_' int2str(k), '.png'], 'BitDepth', 8);
+            imwrite(img, ['../../OneDrive - m.titech.ac.jp/Lab/data/hadamard', int2str(n), '_cap_B_', expDate, '/hadamard_' int2str(ind), '.png'], 'BitDepth', 8);
         end
 
     end

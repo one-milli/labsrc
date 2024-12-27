@@ -46,7 +46,6 @@ ulr = 750;
 vid.FramesPerTrigger = 5;
 triggerconfig(vid, 'manual');
 vid.TriggerRepeat = 0;
-vid.BufferSize = 5;
 start(vid);
 
 %% capture

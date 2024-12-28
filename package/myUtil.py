@@ -156,6 +156,20 @@ def get_use_list_manual():
     return use_list
 
 
+def read_use_list(file_path):
+    """
+    MATファイルからuse_listを読み込む関数。
+
+    Parameters:
+    file_path (str): MATファイルのパス。
+
+    Returns:
+    numpy.ndarray: use_list。
+    """
+    use_list = sio.loadmat(file_path)["use_list"]
+    return use_list
+
+
 def images2matrix(folder_path, use_list, thin_out=False):
     """
     画像フォルダ内の画像を読み込み、指定されたインデックスの画像をフラット化して行列に変換する関数。

@@ -8,7 +8,7 @@ trimRowFrom = 381;
 trimRowTo = 930;
 trimColFrom = 251;
 trimColTo = 800;
-m = 500;
+% m = 500;
 n = 256;
 nn = n * n;
 
@@ -36,13 +36,13 @@ wy_pc = 768;
 % wx_cam = 1280;
 % wy_cam = 1024;
 
-Nnumx = round(log2(wx_pro)); %=11
-Nnumy = round(log2(wy_pro)) + 1; %=10+1 to cover all the pixels
+% Nnumx = round(log2(wx_pro)); %=11
+% Nnumy = round(log2(wy_pro)) + 1; %=10+1 to cover all the pixels
 
 % Screen region definition
 rect_pro = [wx_pc + 1 wy_pc - wy_pro + 1 wx_pro wy_pro]; %Origin(pc lower left)
-rect_pc = [1 wy_pc wx_pc wy_pc];
-rect_pc_confirm = [floor(wx_pc / 4) floor(wy_pc / 4) floor(wx_pc / 2) floor(wy_pc / 2)];
+% rect_pc = [1 wy_pc wx_pc wy_pc];
+% rect_pc_confirm = [floor(wx_pc / 4) floor(wy_pc / 4) floor(wx_pc / 2) floor(wy_pc / 2)];
 
 %% Figure initialization
 set(0, 'defaultfigureposition', rect_pro);
@@ -52,19 +52,22 @@ ha = axes('Parent', h, 'Units', 'pixels', 'Position', [1 1 wx_pro wy_pro]);
 %% Camera Settings
 vid = videoinput('pointgrey', 1, 'F7_RGB_1288x964_Mode0');
 src = getselectedsource(vid);
-mg = 1; %magnification
-ulc = 500;
-ulr = 750;
+disp(src);
+
 vid.FramesPerTrigger = 5;
-triggerconfig(vid, 'manual');
 vid.TriggerRepeat = Inf;
+triggerconfig(vid, 'manual');
 start(vid);
 
 %% capture
+mg = 1; %magnification
+ulc = 500;
+ulr = 750;
 % data = load('use_list256_5.0.mat');
 data = load('use_list_manual.mat');
 sta = 1;
-fin = floor(nn * 0.05);
+% fin = floor(nn * 0.05);
+fin = length(data.use_list);
 
 for k = sta:fin
     ind = data.use_list(k);

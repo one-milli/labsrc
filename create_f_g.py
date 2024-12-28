@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import cupy as cp
 from PIL import Image
 from package import myUtil
@@ -9,7 +8,8 @@ cap_dates = {128: "241114", 256: "241205"}
 n = 128
 LAMBDA = 100
 RATIO = 0.05
-DATA_PATH = "../data"
+# DATA_PATH = "../data"
+DATA_PATH = "../../OneDrive - m.titech.ac.jp/Lab/data"
 IMG_NAME = "hadamard"
 CAP_DATE = cap_dates[n]
 EXP_DATE = "241206"
@@ -39,5 +39,5 @@ F_hat = 2 * F - 1
 G_hat = 2 * G - H1
 del F, G, H1
 
-np.save(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy", F_hat)
-np.save(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy", G_hat)
+cp.save(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy", F_hat)
+cp.save(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy", G_hat)

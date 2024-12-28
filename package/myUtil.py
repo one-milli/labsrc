@@ -150,6 +150,12 @@ def get_use_list(n, p):
     return use_list
 
 
+def get_use_list_manual():
+    use_list = np.array([1411, 1464, 5932, 5968, 5970, 5980, 5990, 6005, 6010, 6019, 6030, 6034, 6100, 6153])
+    sio.savemat("use_list_manual.mat", {"use_list": use_list})
+    return use_list
+
+
 def images2matrix(folder_path, use_list, thin_out=False):
     """
     画像フォルダ内の画像を読み込み、指定されたインデックスの画像をフラット化して行列に変換する関数。

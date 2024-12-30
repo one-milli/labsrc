@@ -1,25 +1,15 @@
 import os
 import math
+import multiprocessing
 from typing import List
+from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import cupy as cp
 import cupyx.scipy.sparse as csp
-from concurrent.futures import ProcessPoolExecutor
 
-cap_dates = {128: "241114", 256: "241205"}
-n = 128
-LAMBDA = 100
-RATIO = 0.05
-DATA_PATH = "../data"
-CAP_DATE = cap_dates[n]
-EXP_DATE = "241230"
-DIRECTORY = f"{DATA_PATH}/{EXP_DATE}"
-SETTING = f"{n}_p-{int(100*RATIO)}_lmd-{LAMBDA}"
 
-if not os.path.exists(DIRECTORY):
-    os.makedirs(DIRECTORY)
-if not os.path.exists(DIRECTORY + "/systemMatrix"):
-    os.makedirs(DIRECTORY + "/systemMatrix")
+def initialize_gpu(gpu_id):
+    cp.cuda.Device(gpu_id).use()
 
 
 def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> csp.csr_matrix:
@@ -30,6 +20,7 @@ def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> csp.csr_matrix:
 
 
 def fista_chunk(
+    gpu_id: int,
     F: cp.ndarray,
     G_chunk: cp.ndarray,
     lmd: float,
@@ -40,6 +31,7 @@ def fista_chunk(
     """
     各チャンクのFISTA処理
     """
+    initialize_gpu(gpu_id)
     N = F.shape[0]
     rows = G_chunk.shape[0]
     H_chunk = cp.zeros((rows, N), dtype=cp.float32)
@@ -59,37 +51,37 @@ def fista_parallel(
     G: cp.ndarray,
     M: int,
     lmd: float,
-    chunk_size: int = 3000,
     max_iter: int = 150,
 ) -> csp.csr_matrix:
     """
     FISTAの並列バージョン
     """
+    gpu_ids = [0, 1]
+    num_gpus = len(gpu_ids)
+    num_processes = 4
     N = F.shape[0]
     L = N
     gamma = 1.0 / (L * 3)
 
-    # 反復のt_memoを準備
     t_memo = cp.ones(max_iter + 1, dtype=cp.float32)
     for i in range(1, max_iter + 1):
         t_memo[i] = (1 + math.sqrt(1 + 4 * t_memo[i - 1] ** 2)) / 2
 
     # チャンクごとの処理を並列化
     chunks: List[csp.csr_matrix] = []
-    c_length = math.ceil(M / chunk_size)
+    chunk_size = math.ceil(M // num_processes)
     futures = []
 
-    with ProcessPoolExecutor() as executor:
-        for c in range(0, c_length):
-            print(f"Chunk {c+1}/{c_length}")
+    with ProcessPoolExecutor(max_workers=num_processes) as executor:
+        for c in range(num_processes):
+            gpu_id = gpu_ids[c % num_gpus]
+            print(f"Chunk {c+1}/{num_processes}")
             start = c * chunk_size
             end = min((c + 1) * chunk_size, M)
             G_chunk = G[start:end, :]
 
-            # 非同期で実行
-            futures.append(executor.submit(fista_chunk, F, G_chunk, lmd, gamma, max_iter, t_memo))
+            futures.append(executor.submit(fista_chunk, gpu_id, F, G_chunk, lmd, gamma, max_iter, t_memo))
 
-        # 結果を収集
         for future in futures:
             chunks.append(future.result())
 
@@ -97,12 +89,34 @@ def fista_parallel(
     return H_csp
 
 
-F_hat = cp.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy")
-G_hat = cp.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy")
+if __name__ == "__main__":
+    multiprocessing.set_start_method("spawn")
 
-H = fista_parallel(F_hat, G_hat, G_hat.shape[0], LAMBDA)
+    cap_dates = {128: "241114", 256: "241205"}
+    n = 128
+    LAMBDA = 100
+    RATIO = 0.05
+    DATA_PATH = "../data"
+    CAP_DATE = cap_dates[n]
+    EXP_DATE = "241230"
+    DIRECTORY = f"{DATA_PATH}/{EXP_DATE}"
+    SETTING = f"{n}_p-{int(100*RATIO)}_lmd-{LAMBDA}"
 
-print(f"shape: {H.shape}, nnz: {H.nnz}({H.nnz / H.shape[0] / H.shape[1] * 100:.2f}%)")
-H_np = {"data": cp.asnumpy(H.data), "indices": cp.asnumpy(H.indices), "indptr": cp.asnumpy(H.indptr), "shape": H.shape}
-np.savez(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz", **H_np)
-print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz")
+    if not os.path.exists(DIRECTORY):
+        os.makedirs(DIRECTORY)
+    if not os.path.exists(DIRECTORY + "/systemMatrix"):
+        os.makedirs(DIRECTORY + "/systemMatrix")
+    F_hat = cp.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy")
+    G_hat = cp.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy")
+
+    H = fista_parallel(F_hat, G_hat, G_hat.shape[0], LAMBDA)
+
+    print(f"shape: {H.shape}, nnz: {H.nnz}({H.nnz / H.shape[0] / H.shape[1] * 100:.2f}%)")
+    H_np = {
+        "data": cp.asnumpy(H.data),
+        "indices": cp.asnumpy(H.indices),
+        "indptr": cp.asnumpy(H.indptr),
+        "shape": H.shape,
+    }
+    np.savez(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz", **H_np)
+    print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz")

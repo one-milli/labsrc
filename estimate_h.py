@@ -21,12 +21,12 @@ def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> cp.ndarray:
 
 def fista_chunk(
     gpu_id: int,
-    F: cp.ndarray,
-    G_chunk: cp.ndarray,
+    F: np.ndarray,
+    G_chunk: np.ndarray,
     lmd: float,
     gamma: float,
     max_iter: int,
-    t_memo: cp.ndarray,
+    t_memo: np.ndarray,
 ) -> csp.csr_matrix:
     """
     各チャンクのFISTA処理
@@ -43,13 +43,14 @@ def fista_chunk(
         H_chunk_old = H_chunk.copy()
         H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F - G_chunk_gpu) @ F.T, gamma * lmd, N)
         Y_chunk = H_chunk + ((t_memo[i] - 1) / t_memo[i + 1]) * (H_chunk - H_chunk_old)
-        print(f"Process {gpu_id+1} | Iteration {i+1}/{max_iter}")
+        if i % 10 == 0:
+            print(f"Process {gpu_id+1} | Iteration {i+1}/{max_iter}")
 
     return csp.csr_matrix(H_chunk)
 
 
 def fista_parallel(
-    F: cp.ndarray,
+    F: np.ndarray,
     G: np.ndarray,
     M: int,
     lmd: float,
@@ -65,7 +66,7 @@ def fista_parallel(
     L = N
     gamma = 1.0 / (L * 3)
 
-    t_memo = cp.ones(max_iter + 1, dtype=cp.float32)
+    t_memo = np.ones(max_iter + 1, dtype=np.float32)
     for i in range(1, max_iter + 1):
         t_memo[i] = (1 + math.sqrt(1 + 4 * t_memo[i - 1] ** 2)) / 2
 
@@ -109,7 +110,7 @@ if __name__ == "__main__":
         os.makedirs(DIRECTORY)
     if not os.path.exists(DIRECTORY + "/systemMatrix"):
         os.makedirs(DIRECTORY + "/systemMatrix")
-    F_hat = cp.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy")
+    F_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy")
     G_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy")
 
     H = fista_parallel(F_hat, G_hat, G_hat.shape[0], LAMBDA)

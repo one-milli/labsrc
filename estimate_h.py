@@ -12,7 +12,7 @@ def initialize_gpu(gpu_id):
     cp.cuda.Device(gpu_id).use()
 
 
-def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> csp.csr_matrix:
+def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> cp.ndarray:
     factor = (2 * gamma) / (1 + 2 * gamma * N)
     l1_norms = cp.sum(cp.absolute(Y), axis=1)
     X = cp.sign(Y) * cp.maximum(cp.absolute(Y) - factor * l1_norms[:, None], 0)
@@ -37,18 +37,20 @@ def fista_chunk(
     H_chunk = cp.zeros((rows, N), dtype=cp.float32)
     H_chunk_old = cp.zeros((rows, N), dtype=cp.float32)
     Y_chunk = cp.zeros((rows, N), dtype=cp.float32)
+    G_chunk_gpu = cp.asarray(G_chunk)
 
     for i in range(max_iter):
         H_chunk_old = H_chunk.copy()
-        H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F - G_chunk) @ F.T, gamma * lmd, N)
+        H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F - G_chunk_gpu) @ F.T, gamma * lmd, N)
         Y_chunk = H_chunk + ((t_memo[i] - 1) / t_memo[i + 1]) * (H_chunk - H_chunk_old)
+        print(f"Process {gpu_id+1} | Iteration {i+1}/{max_iter}")
 
     return csp.csr_matrix(H_chunk)
 
 
 def fista_parallel(
     F: cp.ndarray,
-    G: cp.ndarray,
+    G: np.ndarray,
     M: int,
     lmd: float,
     max_iter: int = 150,
@@ -67,19 +69,20 @@ def fista_parallel(
     for i in range(1, max_iter + 1):
         t_memo[i] = (1 + math.sqrt(1 + 4 * t_memo[i - 1] ** 2)) / 2
 
-    # チャンクごとの処理を並列化
+    chunk_size = math.ceil(M / num_processes)
     chunks: List[csp.csr_matrix] = []
-    chunk_size = math.ceil(M // num_processes)
     futures = []
 
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         for c in range(num_processes):
             gpu_id = gpu_ids[c % num_gpus]
-            print(f"Chunk {c+1}/{num_processes}")
             start = c * chunk_size
             end = min((c + 1) * chunk_size, M)
+            if start >= M:
+                break
             G_chunk = G[start:end, :]
 
+            print(f"Process {c+1}/{num_processes} on GPU {gpu_id} | rows: {G_chunk.shape[0]}")
             futures.append(executor.submit(fista_chunk, gpu_id, F, G_chunk, lmd, gamma, max_iter, t_memo))
 
         for future in futures:
@@ -90,7 +93,7 @@ def fista_parallel(
 
 
 if __name__ == "__main__":
-    multiprocessing.set_start_method("spawn")
+    multiprocessing.set_start_method("spawn", force=True)
 
     cap_dates = {128: "241114", 256: "241205"}
     n = 128
@@ -107,7 +110,7 @@ if __name__ == "__main__":
     if not os.path.exists(DIRECTORY + "/systemMatrix"):
         os.makedirs(DIRECTORY + "/systemMatrix")
     F_hat = cp.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy")
-    G_hat = cp.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy")
+    G_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy")
 
     H = fista_parallel(F_hat, G_hat, G_hat.shape[0], LAMBDA)
 

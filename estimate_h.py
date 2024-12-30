@@ -37,11 +37,12 @@ def fista_chunk(
     H_chunk = cp.zeros((rows, N), dtype=cp.float32)
     H_chunk_old = cp.zeros((rows, N), dtype=cp.float32)
     Y_chunk = cp.zeros((rows, N), dtype=cp.float32)
+    F_gpu = cp.asarray(F)
     G_chunk_gpu = cp.asarray(G_chunk)
 
     for i in range(max_iter):
         H_chunk_old = H_chunk.copy()
-        H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F - G_chunk_gpu) @ F.T, gamma * lmd, N)
+        H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F_gpu - G_chunk_gpu) @ F_gpu.T, gamma * lmd, N)
         Y_chunk = H_chunk + ((t_memo[i] - 1) / t_memo[i + 1]) * (H_chunk - H_chunk_old)
         if i % 10 == 0:
             print(f"Process {gpu_id+1} | Iteration {i+1}/{max_iter}")

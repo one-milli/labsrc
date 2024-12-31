@@ -1,3 +1,7 @@
+"""estimate_h_split.py"""
+
+# pylint: disable=invalid-name
+
 import os
 import math
 import multiprocessing
@@ -9,10 +13,16 @@ import cupyx.scipy.sparse as csp
 
 
 def initialize_gpu(gpu_id):
+    """
+    GPUの初期化
+    """
     cp.cuda.Device(gpu_id).use()
 
 
 def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> cp.ndarray:
+    """
+    L1,2ノルムの2乗のprox
+    """
     factor = (2 * gamma) / (1 + 2 * gamma * N)
     l1_norms = cp.sum(cp.absolute(Y), axis=1)
     X = cp.sign(Y) * cp.maximum(cp.absolute(Y) - factor * l1_norms[:, None], 0)
@@ -90,8 +100,8 @@ def fista_parallel(
         for future in futures:
             chunks.append(future.result())
 
-    H_csp = csp.vstack(chunks).tocsr()
-    return H_csp
+    H = csp.vstack(chunks).tocsr()
+    return H
 
 
 if __name__ == "__main__":
@@ -111,17 +121,20 @@ if __name__ == "__main__":
         os.makedirs(DIRECTORY)
     if not os.path.exists(DIRECTORY + "/systemMatrix"):
         os.makedirs(DIRECTORY + "/systemMatrix")
-    F_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy")
-    G_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy")
+    F_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy").astype(np.int8)
+    G_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy").astype(np.float32)
+    print(f"F_hat shape: {F_hat.shape}, dtype: {F_hat.dtype}")
+    print(f"G_hat shape: {G_hat.shape}, dtype: {G_hat.dtype}")
 
-    H = fista_parallel(F_hat, G_hat, G_hat.shape[0], LAMBDA)
+    H_csp = fista_parallel(F_hat, G_hat, G_hat.shape[0], LAMBDA)
 
-    print(f"shape: {H.shape}, nnz: {H.nnz}({H.nnz / H.shape[0] / H.shape[1] * 100:.2f}%)")
+    print(f"shape: {H_csp.shape}")
+    print(f"nnz ratio: {H_csp.nnz}({H_csp.nnz / (H_csp.shape[0] * H_csp.shape[1]) * 100:.2f}%)")
     H_np = {
-        "data": cp.asnumpy(H.data),
-        "indices": cp.asnumpy(H.indices),
-        "indptr": cp.asnumpy(H.indptr),
-        "shape": H.shape,
+        "data": cp.asnumpy(H_csp.data),
+        "indices": cp.asnumpy(H_csp.indices),
+        "indptr": cp.asnumpy(H_csp.indptr),
+        "shape": H_csp.shape,
     }
     np.savez(f"{DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz", **H_np)
     print(f"Saved {DIRECTORY}/systemMatrix/H_matrix_{SETTING}.npz")

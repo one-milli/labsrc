@@ -170,14 +170,13 @@ def read_use_list(file_path):
     return use_list
 
 
-def images2matrix(folder_path, use_list, thin_out=False):
+def images2matrix(folder_path, use_list, n):
     """
     画像フォルダ内の画像を読み込み、指定されたインデックスの画像をフラット化して行列に変換する関数。
 
     Parameters:
     folder_path (str): 画像フォルダのパス。
     use_list (ndarray): 使用する画像のインデックスのリスト。
-    thin_out (bool): 画像を間引くかどうか。
 
     Returns:
     np.ndarray: 画像の行列。
@@ -186,15 +185,16 @@ def images2matrix(folder_path, use_list, thin_out=False):
     files.sort(key=lambda f: int(re.search(r"(\d+).png", f).group(1)))
 
     images = []
-    # for i in use_list.tolist():  # 128
-    for i in range(1, len(use_list) + 1):  # 256
-        img = Image.open(os.path.join(folder_path, files[i - 1])).convert("L")
-        img_array = (cp.asarray(img) / 255).astype(cp.float32)
-        if thin_out:
-            img_array = img_array[::2, ::2].ravel()
-        else:
-            img_array = img_array.ravel()
-        images.append(img_array)
+    if n == 128:
+        for i in use_list.tolist():
+            img = Image.open(os.path.join(folder_path, files[i - 1])).convert("L")
+            img_array = (cp.asarray(img) / 255).astype(cp.float32).ravel()
+            images.append(img_array)
+    elif n == 256:
+        for i in range(1, len(use_list) + 1):
+            img = Image.open(os.path.join(folder_path, files[i - 1])).convert("L")
+            img_array = (cp.asarray(img) / 255).astype(cp.float32).ravel()
+            images.append(img_array)
 
     return cp.column_stack(images)
 

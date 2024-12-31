@@ -1,6 +1,5 @@
 """estimate_h.py"""
 
-# pylint: disable=line-too-long
 # pylint: disable=invalid-name
 
 import os
@@ -71,6 +70,8 @@ if __name__ == "__main__":
 
     F_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy")
     G_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy")
+    print(f"F_hat shape: {F_hat.shape}")
+    print(f"G_hat shape: {G_hat.shape}")
 
     H_csp = fista(F_hat, G_hat, G_hat.shape[0], LAMBDA)
 

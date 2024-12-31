@@ -46,8 +46,6 @@ def fista(
         H_old = H.copy()
         H = prox_l122(Y - gamma * (Y @ F_gpu - G_gpu) @ F_gpu.T, gamma * lmd, N)
         Y = H + ((t_memo[i] - 1) / t_memo[i + 1]) * (H - H_old)
-        if i % 10 == 0:
-            print(f"Iteration {i+1}/{max_iter}")
 
     return csp.csr_matrix(H)
 

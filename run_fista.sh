@@ -6,4 +6,6 @@
 #$ -o output.log
 #$ -e error.log
 
+module load cuda/12.3.2
+
 python estimate_h.py

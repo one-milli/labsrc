@@ -68,8 +68,8 @@ if __name__ == "__main__":
     if not os.path.exists(DIRECTORY + "/systemMatrix"):
         os.makedirs(DIRECTORY + "/systemMatrix")
 
-    F_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy")
-    G_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy")
+    F_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/F_hat.npy").astype(np.int8)
+    G_hat = np.load(f"{DATA_PATH}/capture_{CAP_DATE}/G_hat.npy").astype(np.float32)
     print(f"F_hat shape: {F_hat.shape}, dtype: {F_hat.dtype}")
     print(f"G_hat shape: {G_hat.shape}, dtype: {G_hat.dtype}")
 

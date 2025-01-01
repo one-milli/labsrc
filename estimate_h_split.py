@@ -40,11 +40,12 @@ def fista_chunk(
 
     N = F.shape[0]
     M_ = G_chunk.shape[0]
-    part_size = M_ // 4
+    split_size = 10
+    part_size = M_ // split_size
     F_gpu = cp.asarray(F)
     parts: List[csp.csr_matrix] = []
 
-    for p in range(10):
+    for p in range(split_size):
         r_start = p * part_size
         r_end = min((p + 1) * part_size, M_)
         rows = r_end - r_start

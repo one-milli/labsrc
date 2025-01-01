@@ -58,7 +58,7 @@ def fista_chunk(
             H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F_gpu - G_chunk_gpu) @ F_gpu.T, gamma * lmd, N)
             Y_chunk = H_chunk + ((t_memo[i] - 1) / t_memo[i + 1]) * (H_chunk - H_chunk_old)
             if i % 10 == 0:
-                print(f"Process {gpu_id+1} | Iteration {i+1}/{max_iter}")
+                print(f"Process {gpu_id+1} | Part {p} | Iteration {i+1}/{max_iter}")
         parts.append(csp.csr_matrix(H_chunk))
 
     return csp.vstack(parts).tocsr()
@@ -74,7 +74,8 @@ def fista_parallel(
     """
     FISTAの並列バージョン
     """
-    gpu_ids = list(range(cp.cuda.runtime.getDeviceCount()))
+    # gpu_ids = list(range(cp.cuda.runtime.getDeviceCount()))
+    gpu_ids = [0, 1, 2]
     num_gpus = len(gpu_ids)
     num_processes_per_gpu = 1
     num_processes = num_gpus * num_processes_per_gpu

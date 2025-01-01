@@ -98,22 +98,11 @@ def plot_sparse_matrix_cupy(csr, row_range=None, col_range=None, markersize=0.1)
     plt.show()
 
 
-def calculate_bias(px_cnt, data_path, cap_date):
-    black_img1 = Image.open(f"{data_path}/capture_{cap_date}/Black1.png").convert("L")
-    black_img2 = Image.open(f"{data_path}/capture_{cap_date}/Black2.png").convert("L")
-    black_img3 = Image.open(f"{data_path}/capture_{cap_date}/Black3.png").convert("L")
-    black_img4 = Image.open(f"{data_path}/capture_{cap_date}/Black4.png").convert("L")
-    black_img5 = Image.open(f"{data_path}/capture_{cap_date}/Black5.png").convert("L")
-    black1 = cp.asarray(black_img1) / 255
-    black2 = cp.asarray(black_img2) / 255
-    black3 = cp.asarray(black_img3) / 255
-    black4 = cp.asarray(black_img4) / 255
-    black5 = cp.asarray(black_img5) / 255
-    average = (black1 + black2 + black3 + black4 + black5) / 5
-    average_value = cp.mean(average)
-    bias_vector = cp.full(px_cnt, average_value)
-    print(f"average_value: {average_value}")
-    return bias_vector
+def calculate_bias(data_path, cap_date):
+    black_img = Image.open(f"{data_path}/capture_{cap_date}/Black.png").convert("L")
+    black = (np.asarray(black_img) / 255).astype(np.float32)
+    average_value = np.mean(black)
+    return average_value
 
 
 def get_use_list(n, p):
@@ -167,10 +156,10 @@ def read_use_list(file_path):
     numpy.ndarray: use_list。
     """
     use_list = sio.loadmat(file_path)["use_list"]
-    return use_list
+    return use_list[0]
 
 
-def images2matrix(folder_path, use_list, n):
+def images2matrix(folder_path, use_list, n, bias_val=0):
     """
     画像フォルダ内の画像を読み込み、指定されたインデックスの画像をフラット化して行列に変換する関数。
 
@@ -193,7 +182,7 @@ def images2matrix(folder_path, use_list, n):
     elif n == 256:
         for i in range(1, len(use_list) + 1):
             img = Image.open(os.path.join(folder_path, files[i - 1])).convert("L")
-            img_array = (cp.asarray(img) / 255).astype(cp.float32).ravel()
+            img_array = (cp.asarray(img) / 255).astype(cp.float32).ravel() - bias_val
             images.append(img_array)
 
     return cp.column_stack(images)

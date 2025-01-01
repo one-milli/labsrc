@@ -1,9 +1,11 @@
 """estimate_h_split.py"""
 
 # pylint: disable=invalid-name
+# pylint: disable=line-too-long
 
 import os
 import math
+import time
 import multiprocessing
 from typing import List
 from concurrent.futures import ProcessPoolExecutor
@@ -70,9 +72,10 @@ def fista_parallel(
     """
     FISTAの並列バージョン
     """
-    gpu_ids = [0, 1]
+    gpu_ids = list(range(cp.cuda.runtime.getDeviceCount()))
     num_gpus = len(gpu_ids)
-    num_processes = 4
+    num_processes_per_gpu = 1
+    num_processes = num_gpus * num_processes_per_gpu
     N = F.shape[0]
     L = N
     gamma = 1.0 / (L * 3)
@@ -85,6 +88,7 @@ def fista_parallel(
     chunks: List[csp.csr_matrix] = []
     futures = []
 
+    start = time.perf_counter()
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         for c in range(num_processes):
             gpu_id = gpu_ids[c % num_gpus]
@@ -99,12 +103,16 @@ def fista_parallel(
 
         for future in futures:
             chunks.append(future.result())
+    end = time.perf_counter()
+    print(f"Elapsed time: {end - start:.2f}s")
 
     H = csp.vstack(chunks).tocsr()
     return H
 
 
 if __name__ == "__main__":
+    print(time.strftime("%Y/%m/%d %H:%M:%S"))
+
     multiprocessing.set_start_method("spawn", force=True)
 
     cap_dates = {128: "241114", 256: "241205"}

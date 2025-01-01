@@ -10,7 +10,7 @@ from package import myUtil
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 cap_dates = {128: "241114", 256: "241205"}
-n = 128
+n = 256
 LAMBDA = 100
 RATIO = 0.05
 DATA_PATH = "../data"
@@ -19,8 +19,8 @@ IMG_NAME = "hadamard"
 CAP_DATE = cap_dates[n]
 SETTING = f"{n}_p-{int(100*RATIO)}_lmd-{LAMBDA}"
 
-use_list = myUtil.get_use_list(n**2, RATIO)
-# use_list = myUtil.read_use_list(f"use_list{n}_{100*RATIO}.mat")
+# use_list = myUtil.get_use_list(n**2, RATIO)
+use_list = myUtil.read_use_list(f"use_list{n}_5.0.mat")
 
 G = myUtil.images2matrix(f"{DATA_PATH}/{IMG_NAME}{n}_cap_{CAP_DATE}/", use_list, n).astype(cp.float32)
 F = myUtil.images2matrix(f"{DATA_PATH}/{IMG_NAME}{n}_input/", use_list, n).astype(cp.int8)

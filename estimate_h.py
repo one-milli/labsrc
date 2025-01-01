@@ -4,6 +4,7 @@
 
 import os
 import math
+import time
 import numpy as np
 import cupy as cp
 import cupyx.scipy.sparse as csp
@@ -42,15 +43,20 @@ def fista(
     Y = cp.zeros((M, N), dtype=cp.float32)
     F_gpu = cp.asarray(F)
     G_gpu = cp.asarray(G)
+
+    start = time.perf_counter()
     for i in range(max_iter):
         H_old = H.copy()
         H = prox_l122(Y - gamma * (Y @ F_gpu - G_gpu) @ F_gpu.T, gamma * lmd, N)
         Y = H + ((t_memo[i] - 1) / t_memo[i + 1]) * (H - H_old)
+    end = time.perf_counter()
+    print(f"Elapsed time: {end - start:.2f}s")
 
     return csp.csr_matrix(H)
 
 
 if __name__ == "__main__":
+    print(time.strftime("%Y/%m/%d %H:%M:%S"))
     cap_dates = {128: "241114", 256: "241205"}
     n = 128
     LAMBDA = 100

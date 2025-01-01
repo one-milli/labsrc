@@ -88,7 +88,7 @@ def fista_parallel(
     chunks: List[csp.csr_matrix] = []
     futures = []
 
-    start = time.perf_counter()
+    t_start = time.perf_counter()
     with ProcessPoolExecutor(max_workers=num_processes) as executor:
         for c in range(num_processes):
             gpu_id = gpu_ids[c % num_gpus]
@@ -103,8 +103,8 @@ def fista_parallel(
 
         for future in futures:
             chunks.append(future.result())
-    end = time.perf_counter()
-    print(f"Elapsed time: {end - start:.2f}s")
+    t_end = time.perf_counter()
+    print(f"Elapsed time: {t_end - t_start:.2f}s")
 
     H = csp.vstack(chunks).tocsr()
     return H
@@ -115,8 +115,8 @@ if __name__ == "__main__":
 
     multiprocessing.set_start_method("spawn", force=True)
 
-    cap_dates = {128: "241114", 256: "241205"}
-    n = 128
+    cap_dates = {128: "241114", 256: "241216"}
+    n = 256
     LAMBDA = 100
     RATIO = 0.05
     DATA_PATH = "../data"

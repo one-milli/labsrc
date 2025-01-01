@@ -1,6 +1,6 @@
 #!/bin/bash
 #$ -cwd
-#$ -l gpu_1=1
+#$ -l node_f=1
 #$ -l h_rt=1:00:00
 #$ -N run_fista
 #$ -o output.log
@@ -8,4 +8,4 @@
 
 module load cuda/12.3.2
 
-python estimate_h.py
+python estimate_h_split.py

@@ -1,4 +1,4 @@
-"""estimate_h_split.py"""
+"""estimate_h_mpi.py"""
 
 # pylint: disable=invalid-name
 # pylint: disable=line-too-long
@@ -9,6 +9,7 @@ import time
 import multiprocessing
 from typing import List
 from concurrent.futures import ProcessPoolExecutor
+from mpi4py import MPI
 import numpy as np
 import cupy as cp
 import cupyx.scipy.sparse as csp
@@ -39,29 +40,21 @@ def fista_chunk(
     cp.cuda.Device(gpu_id).use()
 
     N = F.shape[0]
-    M_ = G_chunk.shape[0]
-    part_size = math.ceil(M_ / 3)
+    rows = G_chunk.shape[0]
+    H_chunk = cp.zeros((rows, N), dtype=cp.float32)
+    H_chunk_old = cp.zeros((rows, N), dtype=cp.float32)
+    Y_chunk = cp.zeros((rows, N), dtype=cp.float32)
     F_gpu = cp.asarray(F)
-    parts: List[csp.csr_matrix] = []
+    G_chunk_gpu = cp.asarray(G_chunk)
 
-    for p in range(4):
-        start = p * part_size
-        end = min((p + 1) * part_size, M_)
-        rows = end - start
-        H_chunk = cp.zeros((rows, N), dtype=cp.float32)
-        H_chunk_old = cp.zeros((rows, N), dtype=cp.float32)
-        Y_chunk = cp.zeros((rows, N), dtype=cp.float32)
-        G_chunk_gpu = cp.asarray(G_chunk[start:end, :])
+    for i in range(max_iter):
+        H_chunk_old = H_chunk.copy()
+        H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F_gpu - G_chunk_gpu) @ F_gpu.T, gamma * lmd, N)
+        Y_chunk = H_chunk + ((t_memo[i] - 1) / t_memo[i + 1]) * (H_chunk - H_chunk_old)
+        if i % 10 == 0:
+            print(f"Process {gpu_id+1} | Iteration {i+1}/{max_iter}")
 
-        for i in range(max_iter):
-            H_chunk_old = H_chunk.copy()
-            H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F_gpu - G_chunk_gpu) @ F_gpu.T, gamma * lmd, N)
-            Y_chunk = H_chunk + ((t_memo[i] - 1) / t_memo[i + 1]) * (H_chunk - H_chunk_old)
-            if i % 10 == 0:
-                print(f"Process {gpu_id+1} | Iteration {i+1}/{max_iter}")
-        parts.append(csp.csr_matrix(H_chunk))
-
-    return csp.vstack(parts).tocsr()
+    return csp.csr_matrix(H_chunk)
 
 
 def fista_parallel(
@@ -116,6 +109,10 @@ if __name__ == "__main__":
     print(time.strftime("%Y/%m/%d %H:%M:%S"))
 
     multiprocessing.set_start_method("spawn", force=True)
+
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
 
     n = 256
     LAMBDA = 100

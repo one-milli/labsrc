@@ -44,7 +44,7 @@ def fista_chunk(
     F_gpu = cp.asarray(F)
     parts: List[csp.csr_matrix] = []
 
-    for p in range(4):
+    for p in range(10):
         r_start = p * part_size
         r_end = min((p + 1) * part_size, M_)
         rows = r_end - r_start
@@ -57,8 +57,9 @@ def fista_chunk(
             H_chunk_old = H_chunk.copy()
             H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F_gpu - G_chunk_gpu) @ F_gpu.T, gamma * lmd, N)
             Y_chunk = H_chunk + ((t_memo[i] - 1) / t_memo[i + 1]) * (H_chunk - H_chunk_old)
-            if i % 10 == 0:
+            if i % 20 == 0:
                 print(f"Process {gpu_id+1} | Part {p} | Iteration {i+1}/{max_iter}")
+        cp.get_default_memory_pool().free_all_blocks()
         parts.append(csp.csr_matrix(H_chunk))
 
     return csp.vstack(parts).tocsr()

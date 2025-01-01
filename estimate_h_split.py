@@ -14,13 +14,6 @@ import cupy as cp
 import cupyx.scipy.sparse as csp
 
 
-def initialize_gpu(gpu_id):
-    """
-    GPUの初期化
-    """
-    cp.cuda.Device(gpu_id).use()
-
-
 def prox_l122(Y: cp.ndarray, gamma: float, N: int) -> cp.ndarray:
     """
     L1,2ノルムの2乗のprox
@@ -43,7 +36,8 @@ def fista_chunk(
     """
     各チャンクのFISTA処理
     """
-    initialize_gpu(gpu_id)
+    cp.cuda.Device(gpu_id).use()
+
     N = F.shape[0]
     rows = G_chunk.shape[0]
     H_chunk = cp.zeros((rows, N), dtype=cp.float32)
@@ -115,12 +109,11 @@ if __name__ == "__main__":
 
     multiprocessing.set_start_method("spawn", force=True)
 
-    cap_dates = {128: "241114", 256: "241216"}
     n = 256
     LAMBDA = 100
     RATIO = 0.05
     DATA_PATH = "../data"
-    CAP_DATE = cap_dates[n]
+    CAP_DATE = "241216"
     EXP_DATE = "241230"
     DIRECTORY = f"{DATA_PATH}/{EXP_DATE}"
     SETTING = f"{n}_p-{int(100*RATIO)}_lmd-{LAMBDA}"

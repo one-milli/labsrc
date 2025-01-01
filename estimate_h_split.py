@@ -40,18 +40,18 @@ def fista_chunk(
 
     N = F.shape[0]
     M_ = G_chunk.shape[0]
-    part_size = math.ceil(M_ / 3)
+    part_size = M_ // 4
     F_gpu = cp.asarray(F)
     parts: List[csp.csr_matrix] = []
 
     for p in range(4):
-        start = p * part_size
-        end = min((p + 1) * part_size, M_)
-        rows = end - start
+        r_start = p * part_size
+        r_end = min((p + 1) * part_size, M_)
+        rows = r_end - r_start
         H_chunk = cp.zeros((rows, N), dtype=cp.float32)
         H_chunk_old = cp.zeros((rows, N), dtype=cp.float32)
         Y_chunk = cp.zeros((rows, N), dtype=cp.float32)
-        G_chunk_gpu = cp.asarray(G_chunk[start:end, :])
+        G_chunk_gpu = cp.asarray(G_chunk[r_start:r_end, :])
 
         for i in range(max_iter):
             H_chunk_old = H_chunk.copy()

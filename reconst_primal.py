@@ -34,9 +34,9 @@ def prox_l12(f, gamma):
     return factor * f
 
 
-def prox_iota(f, min=0, max=1):
+def prox_iota(f, mini=0, maxi=1):
     # 指示関数のProximal Operator
-    return cp.clip(f, min, max)
+    return cp.clip(f, mini, maxi)
     # return f
 
 
@@ -104,7 +104,7 @@ g = captured.ravel() - bias
 
 # %%
 # 正則化パラメータ
-tau = 1e2
+TAU = 1e2
 
 # GAMMA1とGAMMA2の値のリストを作成
 gamma_values = [10**i for i in range(-6, 0)]
@@ -116,11 +116,11 @@ if not os.path.exists(output_dir):
 
 # %%
 # GAMMA1とGAMMA2の全組み合わせをループ
-for gamma1, gamma2 in product(gamma_values, repeat=2):
-    print(f"Processing GAMMA1={gamma1}, GAMMA2={gamma2}")
+for GAMMA1, GAMMA2 in product(gamma_values, repeat=2):
+    print(f"Processing GAMMA1={GAMMA1}, GAMMA2={GAMMA2}")
 
     # 最適化問題を解く
-    f_reconstructed = primal_dual_solver(g, H, tau, gamma1, gamma2)
+    f_reconstructed = primal_dual_solver(g, H, TAU, GAMMA1, GAMMA2)
 
     # 結果の表示
     f_reconstructed_image = cp.asnumpy(f_reconstructed.reshape((n, n)))
@@ -141,17 +141,17 @@ for gamma1, gamma2 in product(gamma_values, repeat=2):
     plt.axis("off")
 
     plt.subplot(1, 3, 3)
-    plt.title(f"Reconstructed Image\nGAMMA1={gamma1}, GAMMA2={gamma2}")
+    plt.title(f"Reconstructed Image\nGAMMA1={GAMMA1}, GAMMA2={GAMMA2}")
     plt.imshow(f_reconstructed_image, cmap="gray")
     plt.axis("off")
 
     plt.tight_layout()
 
     # 保存用のファイル名を作成
-    gamma1_log = int(np.log10(gamma1))
-    gamma2_log = int(np.log10(gamma2))
+    gamma1_log = int(np.log10(GAMMA1))
+    gamma2_log = int(np.log10(GAMMA2))
     SAVE_PATH = (
-        f"{output_dir}/{OBJ_NAME}_{H_SETTING}_primal_tau-{int(np.log10(tau))}_" f"g1-{gamma1_log}_g2-{gamma2_log}.png"
+        f"{output_dir}/{OBJ_NAME}_{H_SETTING}_primal_tau-{int(np.log10(TAU))}_" f"g1-{gamma1_log}_g2-{gamma2_log}.png"
     )
 
     # 画像を保存

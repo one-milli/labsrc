@@ -6,7 +6,6 @@ import cupyx.scipy.sparse as csp
 import matplotlib.pyplot as plt
 import package.myUtil as myUtil
 from PIL import Image
-from IPython.display import display
 from itertools import product
 
 
@@ -77,14 +76,14 @@ def primal_dual_solver(g, H, tau, gamma1, gamma2, max_iter=10000, tol=1e-4):
 # %%
 # 画像サイズ
 n = 256
-m = 511
+m = 550
 DATA_PATH = "../data"
 # DATA_PATH = "../../OneDrive - m.titech.ac.jp/Lab/data"
 OBJ_NAME = "Cameraman"
 # H_SETTING = "gf"
 H_SETTING = f"{n}_p-5_lmd-100"
-CAP_DATE = "241205"
-EXP_DATE = "241206"
+CAP_DATE = "241216"
+EXP_DATE = "241230"
 
 # %%
 # システム行列 H
@@ -100,15 +99,15 @@ print(f"shape: {H.shape}, nnz: {H.nnz}({H.nnz / H.shape[0] / H.shape[1] * 100:.2
 captured = (cp.asarray(Image.open(f"{DATA_PATH}/capture_{CAP_DATE}/{OBJ_NAME}.png").convert("L")) / 255).astype(
     cp.float32
 )
-black = myUtil.calculate_bias(m**2, DATA_PATH, CAP_DATE)
-g = captured.ravel() - black
+bias = myUtil.calculate_bias(DATA_PATH, CAP_DATE)
+g = captured.ravel() - bias
 
 # %%
 # 正則化パラメータ
 tau = 1e2
 
 # GAMMA1とGAMMA2の値のリストを作成
-gamma_values = [10**i for i in range(-6, 7)]  # 1e-6から1e6までの13値
+gamma_values = [10**i for i in range(-6, 0)]
 
 # 出力ディレクトリの作成
 output_dir = f"{DATA_PATH}/{EXP_DATE}/reconst"

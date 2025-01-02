@@ -41,7 +41,7 @@ def fista_chunk(
     N = F.shape[0]
     M_ = G_chunk.shape[0]
     split_size = 16
-    part_size = M_ // split_size
+    part_size = math.ceil(M_ / split_size)
     F_gpu = cp.asarray(F)
     parts: List[csp.csr_matrix] = []
 

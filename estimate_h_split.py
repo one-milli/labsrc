@@ -40,7 +40,7 @@ def fista_chunk(
 
     N = F.shape[0]
     M_ = G_chunk.shape[0]
-    split_size = 16
+    split_size = 10
     part_size = math.ceil(M_ / split_size)
     F_gpu = cp.asarray(F)
     parts: List[csp.csr_matrix] = []
@@ -72,7 +72,7 @@ def fista_parallel(
     G: np.ndarray,
     M: int,
     lmd: float,
-    max_iter: int = 150,
+    max_iter: int,
 ) -> csp.csr_matrix:
     """
     FISTAの並列バージョン
@@ -123,7 +123,8 @@ if __name__ == "__main__":
 
     n = 256
     LAMBDA = 100
-    MAX_ITER = 300
+    # MAX_ITER = 150  # 128
+    MAX_ITER = 500  # 256
     RATIO = 0.05
     DATA_PATH = "../data"
     CAP_DATE = "241216"

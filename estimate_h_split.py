@@ -40,7 +40,7 @@ def fista_chunk(
 
     N = F.shape[0]
     M_ = G_chunk.shape[0]
-    split_size = 10
+    split_size = 16
     part_size = M_ // split_size
     F_gpu = cp.asarray(F)
     parts: List[csp.csr_matrix] = []
@@ -59,7 +59,8 @@ def fista_chunk(
             H_chunk = prox_l122(Y_chunk - gamma * (Y_chunk @ F_gpu - G_chunk_gpu) @ F_gpu.T, gamma * lmd, N)
             Y_chunk = H_chunk + ((t_memo[i] - 1) / t_memo[i + 1]) * (H_chunk - H_chunk_old)
             if i % 20 == 0:
-                print(f"Process {gpu_id+1} | Part {p} | Iteration {i+1}/{max_iter}")
+                error = cp.linalg.norm(H_chunk - H_chunk_old) / cp.linalg.norm(H_chunk_old)
+                print(f"Process {gpu_id+1} | Part {p} | Iteration {i+1}/{max_iter} | Error: {error:.6f}")
         cp.get_default_memory_pool().free_all_blocks()
         parts.append(csp.csr_matrix(H_chunk))
 
@@ -122,6 +123,7 @@ if __name__ == "__main__":
 
     n = 256
     LAMBDA = 100
+    MAX_ITER = 300
     RATIO = 0.05
     DATA_PATH = "../data"
     CAP_DATE = "241216"
@@ -138,7 +140,7 @@ if __name__ == "__main__":
     print(f"F_hat shape: {F_hat.shape}, dtype: {F_hat.dtype}")
     print(f"G_hat shape: {G_hat.shape}, dtype: {G_hat.dtype}")
 
-    H_csp = fista_parallel(F_hat, G_hat, G_hat.shape[0], LAMBDA)
+    H_csp = fista_parallel(F_hat, G_hat, G_hat.shape[0], LAMBDA, MAX_ITER)
 
     print(f"shape: {H_csp.shape}")
     print(f"nnz ratio: {H_csp.nnz}({H_csp.nnz / (H_csp.shape[0] * H_csp.shape[1]) * 100:.2f}%)")
